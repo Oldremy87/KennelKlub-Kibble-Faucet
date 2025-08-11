@@ -1,0 +1,114 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>KennelKlub KIBL Faucet</title>
+  <style>
+    body {
+      font-family: 'Arial', sans-serif;
+      text-align: center;
+      padding: 20px;
+      background: linear-gradient(135deg, #f5f7fa 0%, #c3cfe2 100%);
+      margin: 0;
+      height: 100vh;
+      display: flex;
+      justify-content: center;
+      align-items: center;
+    }
+    .container {
+      max-width: 500px;
+      background: white;
+      padding: 30px;
+      border-radius: 15px;
+      box-shadow: 0 4px 8px rgba(0, 0, 0, 0.1);
+      border: 2px solid #ffcc00; /* PixelPups gold accent */
+    }
+    h1 {
+      color: #333;
+      font-size: 2em;
+      margin-bottom: 10px;
+    }
+    p {
+      color: #666;
+      font-size: 1.1em;
+      margin-bottom: 20px;
+    }
+    .pixelpup-image {
+      max-width: 200px;
+      margin-bottom: 20px;
+      border-radius: 10px;
+    }
+    input {
+      padding: 12px;
+      margin: 10px 0;
+      width: 80%;
+      border: 2px solid #ffcc00;
+      border-radius: 5px;
+      font-size: 1em;
+    }
+    button {
+      padding: 12px 25px;
+      background: #ffcc00; /* PixelPups gold */
+      color: white;
+      border: none;
+      border-radius: 5px;
+      font-size: 1.2em;
+      cursor: pointer;
+      position: relative;
+      overflow: hidden;
+    }
+    button::after {
+      content: "🐾"; /* Paw print emoji */
+      position: absolute;
+      right: 10px;
+      top: 50%;
+      transform: translateY(-50%);
+      font-size: 1.2em;
+    }
+    button:hover {
+      background: #e6b800; /* Darker gold on hover */
+    }
+    #result {
+      margin-top: 20px;
+      font-size: 1.1em;
+      color: #28a745; /* Success green */
+    }
+    #result.error {
+      color: #dc3545; /* Error red */
+    }
+    audio {
+      display: none;
+    }
+  </style>
+</head>
+<body>
+  <div class="container">
+    <h1>KennelKlub KIBL Faucet</h1>
+    <p>Get 1000 KIBL to fuel your PixelPups adventure! Game launching soon—stay tuned!</p>
+    <img src="pixelpup.png" alt="PixelPup" class="pixelpup-image">
+    <input type="text" id="addressInput" placeholder="Enter your Nexa testnet address (nexatest:...)">
+    <button onclick="requestTokens()">FEED ME!  </button>
+    <p id="result"></p>
+    <audio id="feedSound" src="dogfood.mp3"></audio>
+  </div>
+  <script>
+    async function requestTokens() {
+      const address = document.getElementById('addressInput').value.trim();
+      const result = document.getElementById('result');
+      const feedSound = document.getElementById('feedSound');
+      const response = await fetch('/request-kibl', {
+        method: 'POST',
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify({ address }),
+      });
+      const data = await response.json();
+      result.innerText = data.error || data.message;
+      result.className = data.error ? 'error' : '';
+      if (!data.error) {
+        feedSound.play(); // Play sound on success
+      }
+    }
+  </script>
+</body>
+</html>

@@ -1,0 +1,40 @@
+{"ip":"::1","level":"info","message":"Incoming request:","method":"GET","timestamp":"2025-08-11T03:09:58.674Z","url":"/"}
+{"ip":"::1","level":"info","message":"Incoming request:","method":"GET","timestamp":"2025-08-11T03:09:58.777Z","url":"/pixelpup.png"}
+{"ip":"::1","level":"info","message":"Incoming request:","method":"GET","timestamp":"2025-08-11T03:09:58.950Z","url":"/dogfood.mp3"}
+{"ip":"::1","level":"info","message":"Incoming request:","method":"POST","timestamp":"2025-08-11T03:10:08.181Z","url":"/request-kibl"}
+{"body":{"address":"nexatest:nqtsq5g5p3832tpphtdghtg5ag9jjkgw64zqkxne0ejnrefy"},"level":"info","message":"POST /request-kibl received at:","timestamp":"2025-08-11T03:10:08.182Z"}
+{"address":"nexatest:nqtsq5g5p3832tpphtdghtg5ag9jjkgw64zqkxne0ejnrefy","level":"info","message":"Processing raw address:"}
+{"level":"info","message":"Sanitized address:","sanitizedAddress":"nexatest:nqtsq5g5p3832tpphtdghtg5ag9jjkgw64zqkxne0ejnrefy"}
+{"level":"info","message":"RPC URL:","rpcUrl":"http://127.0.0.1:7229"}
+{"body":"{\"jsonrpc\":\"1.0\",\"id\":\"curltest\",\"method\":\"token\",\"params\":[\"send\",\"nexatest:tp3pdyvauaqa77lz0zdw2max4w00mjl365f3gtmpryxmy3yuxsqqqw469lh95\",\"nexatest:nqtsq5g5p3832tpphtdghtg5ag9jjkgw64zqkxne0ejnrefy\",100000000000]}","level":"info","message":"RPC request body:"}
+{"level":"info","message":"Fetch response status:","status":200}
+{"data":{"error":null,"id":"curltest","result":"8e18aac142d83073ed6d253c7ba19fb4a93cac66066aa2c2b86509c80a102a6b"},"level":"info","message":"RPC response:"}
+{"ip":"::1","level":"info","message":"Incoming request:","method":"GET","timestamp":"2025-08-11T03:10:08.380Z","url":"/favicon.ico"}
+{"ip":"::1","level":"info","message":"Incoming request:","method":"GET","timestamp":"2025-08-11T03:14:07.890Z","url":"/"}
+{"ip":"::1","level":"info","message":"Incoming request:","method":"GET","timestamp":"2025-08-11T03:14:08.007Z","url":"/pixelpup.png"}
+{"ip":"::1","level":"info","message":"Incoming request:","method":"GET","timestamp":"2025-08-11T03:14:08.177Z","url":"/dogfood.mp3"}
+{"ip":"::1","level":"info","message":"Incoming request:","method":"POST","timestamp":"2025-08-11T03:14:11.085Z","url":"/request-kibl"}
+{"body":{"address":"nexatest:nqtsq5g5p3832tpphtdghtg5ag9jjkgw64zqkxne0ejnrefy"},"level":"info","message":"POST /request-kibl received at:","timestamp":"2025-08-11T03:14:11.094Z"}
+{"address":"nexatest:nqtsq5g5p3832tpphtdghtg5ag9jjkgw64zqkxne0ejnrefy","level":"info","message":"Processing raw address:"}
+{"level":"info","message":"Sanitized address:","sanitizedAddress":"nexatest:nqtsq5g5p3832tpphtdghtg5ag9jjkgw64zqkxne0ejnrefy"}
+{"level":"info","message":"RPC URL:","rpcUrl":"http://127.0.0.1:7229"}
+{"body":"{\"jsonrpc\":\"1.0\",\"id\":\"curltest\",\"method\":\"token\",\"params\":[\"send\",\"nexatest:tp3pdyvauaqa77lz0zdw2max4w00mjl365f3gtmpryxmy3yuxsqqqw469lh95\",\"nexatest:nqtsq5g5p3832tpphtdghtg5ag9jjkgw64zqkxne0ejnrefy\",100000000000]}","level":"info","message":"RPC request body:"}
+{"level":"info","message":"Fetch response status:","status":200}
+{"data":{"error":null,"id":"curltest","result":"c6a2c4a3dbc519d9a0723ceb0289e4c389a901473a030d7bd371a8a37ba7381d"},"level":"info","message":"RPC response:"}
+{"ip":"::1","level":"info","message":"Incoming request:","method":"GET","timestamp":"2025-08-11T03:14:11.268Z","url":"/favicon.ico"}
+{"ip":"::1","level":"info","message":"Incoming request:","method":"POST","timestamp":"2025-08-11T03:14:16.793Z","url":"/request-kibl"}
+{"body":{"address":"nexatest:nqtsq5g5p3832tpphtdghtg5ag9jjkgw64zqkxne0ejnrefy"},"level":"info","message":"POST /request-kibl received at:","timestamp":"2025-08-11T03:14:16.806Z"}
+{"address":"nexatest:nqtsq5g5p3832tpphtdghtg5ag9jjkgw64zqkxne0ejnrefy","level":"info","message":"Processing raw address:"}
+{"level":"info","message":"Sanitized address:","sanitizedAddress":"nexatest:nqtsq5g5p3832tpphtdghtg5ag9jjkgw64zqkxne0ejnrefy"}
+{"ip":"::1","level":"info","message":"Incoming request:","method":"POST","timestamp":"2025-08-11T03:14:33.343Z","url":"/request-kibl"}
+{"body":{"address":"nexatest:nqtsq5g5p3832tpphtdghtg5ag9jjkgw64zqkxne0ejnrefy"},"level":"info","message":"POST /request-kibl received at:","timestamp":"2025-08-11T03:14:33.344Z"}
+{"address":"nexatest:nqtsq5g5p3832tpphtdghtg5ag9jjkgw64zqkxne0ejnrefy","level":"info","message":"Processing raw address:"}
+{"level":"info","message":"Sanitized address:","sanitizedAddress":"nexatest:nqtsq5g5p3832tpphtdghtg5ag9jjkgw64zqkxne0ejnrefy"}
+{"ip":"::1","level":"info","message":"Incoming request:","method":"POST","timestamp":"2025-08-11T20:36:23.266Z","url":"/request-kibl"}
+{"body":{"address":"nexatest:nqtsq5g5p3832tpphtdghtg5ag9jjkgw64zqkxne0ejnrefy"},"level":"info","message":"POST /request-kibl received at:","timestamp":"2025-08-11T20:36:23.268Z"}
+{"address":"nexatest:nqtsq5g5p3832tpphtdghtg5ag9jjkgw64zqkxne0ejnrefy","level":"info","message":"Processing raw address:"}
+{"level":"info","message":"Sanitized address:","sanitizedAddress":"nexatest:nqtsq5g5p3832tpphtdghtg5ag9jjkgw64zqkxne0ejnrefy"}
+{"ip":"::1","level":"info","message":"Incoming request:","method":"POST","timestamp":"2025-08-11T20:36:39.949Z","url":"/request-kibl"}
+{"body":{"address":"nexatest:nqtsq5g5p3832tpphtdghtg5ag9jjkgw64zqkxne0ejnrefy"},"level":"info","message":"POST /request-kibl received at:","timestamp":"2025-08-11T20:36:39.950Z"}
+{"address":"nexatest:nqtsq5g5p3832tpphtdghtg5ag9jjkgw64zqkxne0ejnrefy","level":"info","message":"Processing raw address:"}
+{"level":"info","message":"Sanitized address:","sanitizedAddress":"nexatest:nqtsq5g5p3832tpphtdghtg5ag9jjkgw64zqkxne0ejnrefy"}
