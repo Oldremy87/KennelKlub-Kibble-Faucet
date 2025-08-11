@@ -68,8 +68,12 @@ app.post('/request-kibl', ipLimiter, (req, res, next) => {
   }
 
   try {
-    const rpcUrl = process.env.RPC_URL || `http://127.0.0.1:${process.env.RPC_PORT || 7229}`;
-    logger.info('RPC URL:', { rpcUrl });
+    const rpcUrl = process.env.RPC_URL || `http://localhost:${process.env.RPC_PORT || 7229}`;
+    if (process.env.RPC_URL) {
+      logger.info('Using custom RPC_URL:', { rpcUrl });
+    } else {
+      logger.info('Using default RPC URL:', { rpcUrl });
+    }
     const auth = Buffer.from(`${process.env.RPC_USER}:${process.env.RPC_PASSWORD}`).toString('base64');
     const body = JSON.stringify({
       jsonrpc: "1.0",
