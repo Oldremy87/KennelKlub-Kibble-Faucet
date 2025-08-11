@@ -24,7 +24,7 @@ app.use(helmet({
       defaultSrc: ["'self'"],
       scriptSrc: ["'self'", "'unsafe-inline'"], // Allow inline scripts
       scriptSrcAttr: ["'self'", "'unsafe-inline'"], // Allow inline event handlers
-      connectSrc: ["'self'", "http://127.0.0.1:7229"], // Allow fetch to RPC
+      connectSrc: ["'self'", "https://9b1654ee5170.ngrok-free.app"], // Allow fetch to ngrok
       styleSrc: ["'self'", "'unsafe-inline'"] // Allow inline styles
     }
   }
@@ -68,7 +68,7 @@ app.post('/request-kibl', ipLimiter, (req, res, next) => {
   }
 
   try {
-    const rpcUrl = `http://127.0.0.1:${process.env.RPC_PORT}`;
+    const rpcUrl = process.env.RPC_URL || `http://127.0.0.1:${process.env.RPC_PORT}`;
     logger.info('RPC URL:', { rpcUrl });
     const auth = Buffer.from(`${process.env.RPC_USER}:${process.env.RPC_PASSWORD}`).toString('base64');
     const body = JSON.stringify({
