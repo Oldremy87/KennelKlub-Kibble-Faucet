@@ -5,6 +5,7 @@ const helmet = require('helmet');
 const validator = require('validator');
 const winston = require('winston');
 const { rateLimit, ipKeyGenerator } = require('express-rate-limit');
+const { Address, Networks } = require('libnexa-ts');
 const app = express();
 
 // Setup logging with winston
@@ -22,10 +23,10 @@ app.use(helmet({
   contentSecurityPolicy: {
     directives: {
       defaultSrc: ["'self'"],
-      scriptSrc: ["'self'", "'unsafe-inline'"], // Allow inline scripts
-      scriptSrcAttr: ["'self'", "'unsafe-inline'"], // Allow inline event handlers
-      connectSrc: ["'self'", "https://9b1654ee5170.ngrok-free.app"], // Allow fetch to ngrok
-      styleSrc: ["'self'", "'unsafe-inline'"] // Allow inline styles
+      scriptSrc: ["'self'", "'unsafe-inline'"],
+      scriptSrcAttr: ["'self'", "'unsafe-inline'"],
+      connectSrc: ["'self'", "https://346d614067e1.ngrok-free.app"],
+      styleSrc: ["'self'", "'unsafe-inline'"]
     }
   }
 }));
@@ -37,10 +38,10 @@ app.use(express.static('public'));
 
 // Rate limiting (1 request per IP per day)
 const ipLimiter = rateLimit({
-  windowMs: 24 * 60 * 60 * 1000, // 24 hours
-  max: 1, // 1 request per IP
+  windowMs: 24 * 60 * 60 * 1000,
+  max: 1,
   message: { error: 'IP rate limit exceeded. Try again in 24 hours.' },
-  keyGenerator: ipKeyGenerator // Use helper for IPv6 support
+  keyGenerator: ipKeyGenerator
 });
 
 app.get('/', (req, res) => {
@@ -50,21 +51,25 @@ app.get('/', (req, res) => {
 const addressRateLimit = new Map();
 
 app.post('/request-kibl', ipLimiter, (req, res, next) => {
-  logger.info('POST /request-kibl received at:', { timestamp: new Date().toISOString(), body: req.body });
+  logger.info('POST /request-kibl received at:', { timestamp: new Date().toISOString(), rawBody: req.body });
   next();
 }, async (req, res) => {
   const { address } = req.body;
   logger.info('Processing raw address:', { address });
   const sanitizedAddress = validator.trim(address);
   logger.info('Sanitized address:', { sanitizedAddress });
-  if (!sanitizedAddress || !/^(nexa|nexatest):/.test(sanitizedAddress.toLowerCase())) {
+  if (!sanitizedAddress) {
+    logger.warn('Address is empty:', { sanitizedAddress });
+    return res.status(400).json({ error: 'Address cannot be empty!' });
+  }
+  if (!Address.isValid(sanitizedAddress, Networks.testnet)) {
     logger.warn('Address validation failed:', { sanitizedAddress });
-    return res.json({ error: 'Invalid Nexa address!' });
+    return res.status(400).json({ error: 'Invalid Nexa testnet address! Please check your address and try again.' });
   }
 
   const now = Date.now();
   if (addressRateLimit.has(sanitizedAddress) && (now - addressRateLimit.get(sanitizedAddress)) < 24 * 60 * 60 * 1000) {
-    return res.json({ error: 'Address rate limit exceeded. Try again in 24 hours.' });
+    return res.status(429).json({ error: 'Address rate limit exceeded. Try again in 24 hours.' });
   }
 
   try {
@@ -75,7 +80,7 @@ app.post('/request-kibl', ipLimiter, (req, res, next) => {
       jsonrpc: "1.0",
       id: "curltest",
       method: "token",
-      params: ["send", process.env.KIBL_GROUP_ID, sanitizedAddress, 1000 * Math.pow(10, 8)] // 1000 KIBL with 8 decimals
+      params: ["send", process.env.KIBL_GROUP_ID, sanitizedAddress, 1000 * Math.pow(10, 8)]
     });
     logger.info('RPC request body:', { body });
 
@@ -93,7 +98,7 @@ app.post('/request-kibl', ipLimiter, (req, res, next) => {
         const data = await response.json();
         logger.info('RPC response:', { data });
         if (data.error) {
-          throw new Error(data.error.message);
+          throw new Error(data.error.message || 'Unknown RPC error');
         }
         const txId = data.result;
         addressRateLimit.set(sanitizedAddress, now);
@@ -101,12 +106,12 @@ app.post('/request-kibl', ipLimiter, (req, res, next) => {
       } catch (error) {
         logger.error(`Attempt ${attempt} failed at ${new Date().toISOString()}:`, { error });
         if (attempt === 3) throw error;
-        await new Promise(resolve => setTimeout(resolve, 1000 * attempt)); // Wait 1s, 2s, 3s
+        await new Promise(resolve => setTimeout(resolve, 1000 * attempt));
       }
     }
   } catch (error) {
     logger.error('Token send failed at:', { timestamp: new Date().toISOString(), error });
-    res.json({ error: 'Failed to send tokens. Try later.' });
+    return res.status(500).json({ error: 'Failed to send tokens. Try later or contact support.' });
   }
 });
 
