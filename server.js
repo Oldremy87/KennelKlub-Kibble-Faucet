@@ -36,7 +36,7 @@ app.use((req, res, next) => {
 });
 app.use(express.static('public'));
 
-// Rate limiting (1 request per IP per day)
+// Rate limiting (1 request per IP per 24 hours)
 const ipLimiter = rateLimit({
   windowMs: 24 * 60 * 60 * 1000,
   max: 1,
@@ -49,6 +49,7 @@ app.get('/', (req, res) => {
 });
 
 const addressRateLimit = new Map();
+const ipAddressLimit = new Map(); // Track IP + address combinations
 
 app.post('/request-kibl', ipLimiter, (req, res, next) => {
   logger.info('POST /request-kibl received at:', { timestamp: new Date().toISOString(), rawBody: req.body });
@@ -68,6 +69,10 @@ app.post('/request-kibl', ipLimiter, (req, res, next) => {
   }
 
   const now = Date.now();
+  const ipAddressKey = `${req.ip}:${sanitizedAddress}`; // Unique key for IP + address
+  if (ipAddressLimit.has(ipAddressKey) && (now - ipAddressLimit.get(ipAddressKey)) < 24 * 60 * 60 * 1000) {
+    return res.status(429).json({ error: 'IP and address combination rate limit exceeded. Try again in 24 hours.' });
+  }
   if (addressRateLimit.has(sanitizedAddress) && (now - addressRateLimit.get(sanitizedAddress)) < 24 * 60 * 60 * 1000) {
     return res.status(429).json({ error: 'Address rate limit exceeded. Try again in 24 hours.' });
   }
@@ -102,6 +107,7 @@ app.post('/request-kibl', ipLimiter, (req, res, next) => {
         }
         const txId = data.result;
         addressRateLimit.set(sanitizedAddress, now);
+        ipAddressLimit.set(ipAddressKey, now); // Update both limits
         return res.json({ success: true, txId, message: 'Sent 1000 KIBL to ' + sanitizedAddress });
       } catch (error) {
         logger.error(`Attempt ${attempt} failed at ${new Date().toISOString()}:`, { error });
@@ -111,7 +117,7 @@ app.post('/request-kibl', ipLimiter, (req, res, next) => {
     }
   } catch (error) {
     logger.error('Token send failed at:', { timestamp: new Date().toISOString(), error });
-    return res.status(500).json({ error: 'Failed to send tokens. Try later or contact support.' });
+    res.status(500).json({ error: 'Failed to send tokens. Try later or contact support.' });
   }
 });
 
