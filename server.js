@@ -6,6 +6,7 @@ const validator = require('validator');
 const winston = require('winston');
 const { rateLimit, ipKeyGenerator } = require('express-rate-limit');
 const { Address, Networks } = require('libnexa-ts');
+const hcaptcha = require('hcaptcha');
 const app = express();
 
 // Setup logging with winston
@@ -23,10 +24,11 @@ app.use(helmet({
   contentSecurityPolicy: {
     directives: {
       defaultSrc: ["'self'"],
-      scriptSrc: ["'self'", "'unsafe-inline'"],
+      scriptSrc: ["'self'", "'unsafe-inline'", "https://hcaptcha.com", "https://*.hcaptcha.com"],
       scriptSrcAttr: ["'self'", "'unsafe-inline'"],
-      connectSrc: ["'self'", "https://346d614067e1.ngrok-free.app"],
-      styleSrc: ["'self'", "'unsafe-inline'"]
+      connectSrc: ["'self'", "https://346d614067e1.ngrok-free.app", "https://hcaptcha.com", "https://*.hcaptcha.com"],
+      styleSrc: ["'self'", "'unsafe-inline'", "https://hcaptcha.com", "https://*.hcaptcha.com"],
+      frameSrc: ["'self'", "https://hcaptcha.com", "https://*.hcaptcha.com"]
     }
   }
 }));
@@ -36,13 +38,12 @@ app.use((req, res, next) => {
 });
 app.use(express.static('public'));
 
-// Rate limiting (1 request per IP per 24 hours)
+// Rate limiting (1 request per IP per 4 hours)
 const ipLimiter = rateLimit({
-  windowMs: 4 * 60 * 60 * 1000, // 24 hours
+  windowMs: 4 * 60 * 60 * 1000,
   max: 1,
   message: { error: 'IP rate limit exceeded. Try again in 4 hours.' },
   keyGenerator: (req) => {
-    // Use ipKeyGenerator for IPv6 and add user-agent for uniqueness
     return ipKeyGenerator(req) + (req.headers['user-agent'] || '');
   }
 });
@@ -52,10 +53,26 @@ app.get('/', (req, res) => {
 });
 
 const addressRateLimit = new Map();
-const ipAddressLimit = new Map(); // Track IP + address combinations
+const ipAddressLimit = new Map();
 
-app.post('/request-kibl', ipLimiter, (req, res, next) => {
+app.post('/request-kibl', ipLimiter, async (req, res, next) => {
   logger.info('POST /request-kibl received at:', { timestamp: new Date().toISOString(), rawBody: req.body });
+  const { address, 'h-captcha-response': captchaToken } = req.body;
+  if (!captchaToken) {
+    logger.warn('Missing hCaptcha token');
+    return res.status(400).json({ error: 'Please complete the hCaptcha challenge!' });
+  }
+
+  try {
+    const captchaResponse = await hcaptcha.verify(process.env.HCAPTCHA_SECRET, captchaToken);
+    if (!captchaResponse.success) {
+      logger.warn('hCaptcha verification failed');
+      return res.status(400).json({ error: 'hCaptcha verification failed!' });
+    }
+  } catch (error) {
+    logger.error('hCaptcha verification error:', { error });
+    return res.status(500).json({ error: 'hCaptcha service error. Try again later.' });
+  }
   next();
 }, async (req, res) => {
   const { address } = req.body;
@@ -72,9 +89,9 @@ app.post('/request-kibl', ipLimiter, (req, res, next) => {
   }
 
   const now = Date.now();
-  const ipAddressKey = `${req.ip}:${sanitizedAddress}`; // Unique key for IP + address
-  if (ipAddressLimit.has(ipAddressKey) && (now - ipAddressLimit.get(ipAddressKey)) < 24 * 60 * 60 * 1000) {
-    return res.status(429).json({ error: 'IP and address combination rate limit exceeded. Try again in 24 hours.' });
+  const ipAddressKey = `${req.ip}:${sanitizedAddress}`;
+  if (ipAddressLimit.has(ipAddressKey) && (now - ipAddressLimit.get(ipAddressKey)) < 4 * 60 * 60 * 1000) {
+    return res.status(429).json({ error: 'IP and address combination rate limit exceeded. Try again in 4 hours.' });
   }
   if (addressRateLimit.has(sanitizedAddress) && (now - addressRateLimit.get(sanitizedAddress)) < 24 * 60 * 60 * 1000) {
     return res.status(429).json({ error: 'Address rate limit exceeded. Try again in 24 hours.' });
@@ -110,7 +127,7 @@ app.post('/request-kibl', ipLimiter, (req, res, next) => {
         }
         const txId = data.result;
         addressRateLimit.set(sanitizedAddress, now);
-        ipAddressLimit.set(ipAddressKey, now); // Update both limits
+        ipAddressLimit.set(ipAddressKey, now);
         return res.json({ success: true, txId, message: 'Sent 1000 KIBL to ' + sanitizedAddress });
       } catch (error) {
         logger.error(`Attempt ${attempt} failed at ${new Date().toISOString()}:`, { error });
@@ -120,7 +137,7 @@ app.post('/request-kibl', ipLimiter, (req, res, next) => {
     }
   } catch (error) {
     logger.error('Token send failed at:', { timestamp: new Date().toISOString(), error });
-    res.status(500).json({ error: 'Failed to send tokens. Try later or contact support.' });
+    res.status(500).json({ error: 'Failed to send tokens. Try again or contact support.' });
   }
 });
 
