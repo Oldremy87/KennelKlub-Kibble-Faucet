@@ -4,41 +4,40 @@
   <meta charset="UTF-8">
   <meta name="viewport" content="width=device-width, initial-scale=1.0">
   <title>KennelKlub KIBL Faucet</title>
-  <script src="https://hcaptcha.com/1/api.js" async defer></script>
   <style>
     body {
       font-family: 'Arial', sans-serif;
       text-align: center;
-      padding: 50px;
+      padding: 20px;
       background: linear-gradient(135deg, #f5f7fa 0%, #c3cfe2 100%);
       margin: 0;
       height: 100vh;
       display: flex;
       justify-content: center;
       align-items: center;
-      color: #333;
     }
     .container {
       max-width: 500px;
       background: white;
-      padding: 40px;
+      padding: 30px;
       border-radius: 15px;
       box-shadow: 0 4px 8px rgba(0, 0, 0, 0.1);
-      border: 2px solid #ffcc00;
+      border: 2px solid #ffcc00; /* PixelPups gold accent */
     }
     h1 {
-      font-size: 2.2em;
-      margin-bottom: 15px;
+      color: #333;
+      font-size: 2em;
+      margin-bottom: 10px;
     }
     p {
-      font-size: 1.2em;
-      margin-bottom: 25px;
+      color: #666;
+      font-size: 1.1em;
+      margin-bottom: 20px;
     }
     .pixelpup-image {
-      max-width: 250px;
-      margin-bottom: 25px;
+      max-width: 200px;
+      margin-bottom: 20px;
       border-radius: 10px;
-      box-shadow: 0 2px 4px rgba(0, 0, 0, 0.1);
     }
     input {
       padding: 12px;
@@ -46,37 +45,37 @@
       width: 80%;
       border: 2px solid #ffcc00;
       border-radius: 5px;
-      font-size: 1.1em;
+      font-size: 1em;
     }
     button {
-      padding: 12px 30px;
-      background: #ffcc00;
+      padding: 12px 25px;
+      background: #ffcc00; /* PixelPups gold */
       color: white;
       border: none;
       border-radius: 5px;
-      font-size: 1.3em;
+      font-size: 1.2em;
       cursor: pointer;
       position: relative;
-      transition: background 0.3s ease;
+      overflow: hidden;
     }
     button::after {
-      content: "🐾";
-      margin-left: 8px;
-      font-size: 1.1em;
+      content: "🐾"; /* Paw print emoji */
+      position: absolute;
+      right: 10px;
+      top: 50%;
+      transform: translateY(-50%);
+      font-size: 1.2em;
     }
     button:hover {
-      background: #e6b800;
-    }
-    .h-captcha {
-      margin: 15px 0;
+      background: #e6b800; /* Darker gold on hover */
     }
     #result {
       margin-top: 20px;
-      font-size: 1.2em;
-      color: #28a745;
+      font-size: 1.1em;
+      color: #28a745; /* Success green */
     }
     #result.error {
-      color: #dc3545;
+      color: #dc3545; /* Error red */
     }
     audio {
       display: none;
@@ -86,35 +85,28 @@
 <body>
   <div class="container">
     <h1>KennelKlub KIBL Faucet</h1>
-    <p>Get 100 KIBL for the upcoming PixelPup Video Poker game! Launching soon - stay tuned!</p>
-    <img src="pixelpup.png" alt="PixelPup Artwork" class="pixelpup-image">
-    <input type="text" id="addressInput" placeholder="Enter your Nexa address">
-    <div class="h-captcha" data-sitekey="your-hcaptcha-site-key-here"></div>
-    <button onclick="requestTokens()">FEED ME!</button>
+    <p>Get 1000 KIBL to fuel your PixelPups adventure! Game launching soon—stay tuned!</p>
+    <img src="pixelpup.png" alt="PixelPup" class="pixelpup-image">
+    <input type="text" id="addressInput" placeholder="Enter your Nexa testnet address (nexatest:...)">
+    <button onclick="requestTokens()">FEED ME!  </button>
     <p id="result"></p>
     <audio id="feedSound" src="dogfood.mp3"></audio>
   </div>
   <script>
     async function requestTokens() {
       const address = document.getElementById('addressInput').value.trim();
-      const captchaToken = document.querySelector('textarea[name="h-captcha-response"]').value;
       const result = document.getElementById('result');
       const feedSound = document.getElementById('feedSound');
-      if (!captchaToken) {
-        result.innerText = 'Please complete the hCaptcha challenge!';
-        result.className = 'error';
-        return;
-      }
       const response = await fetch('/request-kibl', {
         method: 'POST',
         headers: { 'Content-Type': 'application/json' },
-        body: JSON.stringify({ address, 'h-captcha-response': captchaToken }),
+        body: JSON.stringify({ address }),
       });
       const data = await response.json();
       result.innerText = data.error || data.message;
       result.className = data.error ? 'error' : '';
       if (!data.error) {
-        feedSound.play();
+        feedSound.play(); // Play sound on success
       }
     }
   </script>
