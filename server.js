@@ -38,10 +38,13 @@ app.use(express.static('public'));
 
 // Rate limiting (1 request per IP per 24 hours)
 const ipLimiter = rateLimit({
-  windowMs: 24 * 60 * 60 * 1000,
+  windowMs: 24 * 60 * 60 * 1000, // 24 hours
   max: 1,
   message: { error: 'IP rate limit exceeded. Try again in 24 hours.' },
-  keyGenerator: ipKeyGenerator
+  keyGenerator: (req) => {
+    // Use ipKeyGenerator for IPv6 and add user-agent for uniqueness
+    return ipKeyGenerator(req) + (req.headers['user-agent'] || '');
+  }
 });
 
 app.get('/', (req, res) => {
