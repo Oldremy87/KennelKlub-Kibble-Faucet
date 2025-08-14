@@ -95,7 +95,7 @@ app.post('/request-kibl', ipLimiter, async (req, res, next) => {
     return res.status(400).json({ error: 'hCaptcha verification failed! Error: ' + (captchaResponse['error-codes'] || 'Unknown') });
   }
   next();
-}, (req, res) => {
+}, async (req, res) => {
   const { address } = req.body;
   logger.info('Processing raw address:', { address });
   const sanitizedAddress = validator.trim(address);
