@@ -8,50 +8,37 @@
   <style>
     body {
       font-family: 'Arial', sans-serif;
+      text-align: center;
+      padding: 50px;
+      background: linear-gradient(135deg, #f5f7fa 0%, #c3cfe2 100%);
       margin: 0;
-      padding: 0;
-      min-height: 100vh;
+      height: 100vh;
       display: flex;
       justify-content: center;
       align-items: center;
-      background: linear-gradient(135deg, #f5f7fa 0%, #c3cfe2 100%);
       color: #333;
     }
     .container {
-      background: white;
-      padding: 30px;
-      border-radius: 15px;
-      box-shadow: 0 6px 12px rgba(0, 0, 0, 0.1);
-      border: 3px solid #ffcc00;
       max-width: 500px;
-      text-align: center;
-      animation: fadeIn 1s ease-in;
-    }
-    @keyframes fadeIn {
-      from { opacity: 0; }
-      to { opacity: 1; }
+      background: white;
+      padding: 40px;
+      border-radius: 15px;
+      box-shadow: 0 4px 8px rgba(0, 0, 0, 0.1);
+      border: 2px solid #ffcc00;
     }
     h1 {
-      font-size: 2.5em;
+      font-size: 2.2em;
       margin-bottom: 15px;
-      color: #ffcc00;
-      font-weight: bold;
-      text-shadow: 1px 1px 2px rgba(0, 0, 0, 0.1);
     }
     p {
-      font-size: 1.1em;
-      margin-bottom: 20px;
-      color: #555;
+      font-size: 1.2em;
+      margin-bottom: 25px;
     }
     .pixelpup-image {
       max-width: 250px;
-      margin-bottom: 20px;
+      margin-bottom: 25px;
       border-radius: 10px;
-      box-shadow: 0 4px 8px rgba(0, 0, 0, 0.1);
-      transition: transform 0.3s ease;
-    }
-    .pixelpup-image:hover {
-      transform: scale(1.05);
+      box-shadow: 0 2px 4px rgba(0, 0, 0, 0.1);
     }
     input {
       padding: 12px;
@@ -60,14 +47,6 @@
       border: 2px solid #ffcc00;
       border-radius: 5px;
       font-size: 1.1em;
-      transition: border-color 0.3s ease;
-    }
-    input:focus {
-      border-color: #e6b800;
-      outline: none;
-    }
-    .h-captcha {
-      margin: 15px 0;
     }
     button {
       padding: 12px 30px;
@@ -78,7 +57,7 @@
       font-size: 1.3em;
       cursor: pointer;
       position: relative;
-      transition: background 0.3s ease, transform 0.2s ease;
+      transition: background 0.3s ease;
     }
     button::after {
       content: "🐾";
@@ -87,7 +66,6 @@
     }
     button:hover {
       background: #e6b800;
-      transform: translateY(-2px);
     }
     button:disabled {
       background: #ccc;
@@ -96,9 +74,6 @@
     #result {
       margin-top: 20px;
       font-size: 1.2em;
-      transition: opacity 0.5s ease;
-    }
-    #result.success {
       color: #28a745;
     }
     #result.error {
@@ -142,7 +117,7 @@
     <p>Get 1000 KIBL for the PixelPup Video Poker Game – Launching Soon!</p>
     <img src="pixelpup.png" alt="PixelPup Artwork" class="pixelpup-image">
     <input type="text" id="addressInput" placeholder="Enter your Nexa testnet address" aria-label="Nexa testnet address input">
-    <div class="h-captcha" data-sitekey="d4801768-d9cc-48aa-beb0-bfb00d969b18"></div>
+    <div class="h-captcha" data-sitekey="your-hcaptcha-site-key-here"></div>
     <button id="submitButton" onclick="requestTokens()" aria-label="Request 1000 KIBL tokens">
       FEED ME!
     </button>
@@ -152,22 +127,6 @@
     <a href="https://pixelpupsgame.com" target="_blank" class="community-link" aria-label="Join the PixelPups community">Join the PixelPups Community!</a>
   </div>
   <script>
-    // Load confetti with fallback and wait for it
-    let confettiReady = new Promise((resolve, reject) => {
-      const confettiScript = document.createElement('script');
-      confettiScript.src = 'https://cdnjs.cloudflare.com/ajax/libs/canvas-confetti/1.6.0/confetti.browser.min.js';
-      confettiScript.onload = () => resolve(true);
-      confettiScript.onerror = () => {
-        console.error('CDN failed, trying local fallback');
-        const fallbackScript = document.createElement('script');
-        fallbackScript.src = '/confetti.browser.min.js'; // Add this file to public if needed
-        fallbackScript.onload = () => resolve(true);
-        fallbackScript.onerror = () => reject(new Error('Both CDN and fallback failed'));
-        document.head.appendChild(fallbackScript);
-      };
-      document.head.appendChild(confettiScript);
-    });
-
     const addressInput = document.getElementById('addressInput');
     const submitButton = document.getElementById('submitButton');
     const loading = document.getElementById('loading');
@@ -184,37 +143,22 @@
       }
       submitButton.disabled = true;
       loading.style.display = 'block';
-      let data;
       try {
-        const confettiLoaded = await confettiReady;
-        if (!confettiLoaded) {
-          console.warn('Confetti failed to load, animation skipped');
-        }
         const response = await fetch('/request-kibl', {
           method: 'POST',
           headers: { 'Content-Type': 'application/json' },
           body: JSON.stringify({ address, 'h-captcha-response': captchaToken }),
         });
-        data = await response.json();
-        console.log('Fetch response:', { status: response.status, ok: response.ok });
+        const data = await response.json();
+        console.log('Fetch response:', response);
         console.log('Parsed data:', data);
-        if (!response.ok) {
-          throw new Error(`HTTP error! status: ${response.status}`);
-        }
         result.innerText = data.error || data.message;
         result.className = data.error ? 'error' : 'success';
-        if (data.success === true && confettiLoaded) {
+        if (!data.error) {
           feedSound.play();
-          confetti({
-            particleCount: 100,
-            spread: 70,
-            origin: { y: 0.6 }
-          });
-        } else if (data.error) {
-          console.warn('Error response:', data.error);
         }
       } catch (error) {
-        console.error('Fetch or parsing error:', error);
+        console.error('Fetch error:', error);
         result.innerText = 'An error occurred. Please try again.';
         result.className = 'error';
       } finally {
