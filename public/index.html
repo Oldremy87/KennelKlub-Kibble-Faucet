@@ -5,7 +5,6 @@
   <meta name="viewport" content="width=device-width, initial-scale=1.0">
   <title>KennelKlub KIBL Faucet</title>
   <script src="https://hcaptcha.com/1/api.js" async defer></script>
-  <script src="https://cdnjs.cloudflare.com/ajax/libs/canvas-confetti/1.6.0/confetti.browser.min.js"></script>
   <style>
     body {
       font-family: 'Arial', sans-serif;
@@ -150,16 +149,17 @@
     <div id="loading" aria-live="polite">Processing your request...</div>
     <p id="result" aria-live="polite"></p>
     <audio id="feedSound" src="dogfood.mp3"></audio>
-    <a href="https://pixelpupsgame.com" target="_blank" class="community-link" aria-label="Join the PixelPups community">Join the PixelPups Community!</a>
+    <a href="https://pixelpupsgame.com" target="_blank" class="community-link" aria-label="Join the KennelKlub community">Join the PixelPups Community!</a>
   </div>
   <script>
-    // Ensure confetti loads before using
-    let confettiLoaded = false;
-    const confettiScript = document.createElement('script');
-    confettiScript.src = 'https://cdnjs.cloudflare.com/ajax/libs/canvas-confetti/1.6.0/confetti.browser.min.js';
-    confettiScript.onload = () => { confettiLoaded = true; console.log('Confetti loaded'); };
-    confettiScript.onerror = () => console.error('Failed to load confetti');
-    document.head.appendChild(confettiScript);
+    // Load confetti and wait for it
+    let confettiReady = new Promise((resolve) => {
+      const confettiScript = document.createElement('script');
+      confettiScript.src = 'https://cdnjs.cloudflare.com/ajax/libs/canvas-confetti/1.6.0/confetti.browser.min.js';
+      confettiScript.onload = () => resolve(true);
+      confettiScript.onerror = () => resolve(false);
+      document.head.appendChild(confettiScript);
+    });
 
     const addressInput = document.getElementById('addressInput');
     const submitButton = document.getElementById('submitButton');
@@ -192,6 +192,7 @@
         }
         result.innerText = data.error || data.message;
         result.className = data.error ? 'error' : 'success';
+        const confettiLoaded = await confettiReady;
         if (data.success === true && confettiLoaded) {
           feedSound.play();
           confetti({

@@ -142,6 +142,7 @@ app.post('/request-kibl', ipLimiter, async (req, res, next) => {
         addressRateLimit.set(sanitizedAddress, now);
         ipAddressLimit.set(ipAddressKey, now);
         res.json(successResponse);
+        break; // Exit loop on first success
       } catch (error) {
         logger.error(`Attempt ${attempt} failed at ${new Date().toISOString()}:`, { error });
         if (attempt === 3) throw error;
