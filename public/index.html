@@ -169,18 +169,22 @@
       }
       submitButton.disabled = true;
       loading.style.display = 'block';
+      let data;
       try {
         const response = await fetch('/request-kibl', {
           method: 'POST',
           headers: { 'Content-Type': 'application/json' },
           body: JSON.stringify({ address, 'h-captcha-response': captchaToken }),
         });
-        const data = await response.json();
-        console.log('Fetch response:', response);
+        data = await response.json();
+        console.log('Fetch response:', { status: response.status, ok: response.ok });
         console.log('Parsed data:', data);
+        if (!response.ok) {
+          throw new Error(`HTTP error! status: ${response.status}`);
+        }
         result.innerText = data.error || data.message;
         result.className = data.error ? 'error' : 'success';
-        if (data.success) {
+        if (data.success === true) { // Explicitly check for true
           feedSound.play();
           if (typeof confetti === 'function') {
             confetti({
@@ -195,7 +199,7 @@
           console.warn('Error response:', data.error);
         }
       } catch (error) {
-        console.error('Fetch error:', error);
+        console.error('Fetch or parsing error:', error);
         result.innerText = 'An error occurred. Please try again.';
         result.className = 'error';
       } finally {
