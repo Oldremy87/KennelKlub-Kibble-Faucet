@@ -24,7 +24,7 @@ app.use(helmet({
   contentSecurityPolicy: {
     directives: {
       defaultSrc: ["'self'"],
-      scriptSrc: ["'self'", "'unsafe-inline'", "https://hcaptcha.com", "https://*.hcaptcha.com", "https://cdnjs.cloudflare.com", "https://*.cloudflare.com", "https://speedcf.cloudflareaccess.com"],
+      scriptSrc: ["'self'", "'unsafe-inline'", "https://hcaptcha.com", "https://*.hcaptcha.com", "https://*.cloudflare.com", "https://speedcf.cloudflareaccess.com", "https://cdnjs.cloudflare.com"],
       scriptSrcAttr: ["'self'", "'unsafe-inline'"],
       connectSrc: ["'self'", "https://346d614067e1.ngrok-free.app", "https://hcaptcha.com", "https://*.hcaptcha.com"],
       styleSrc: ["'self'", "'unsafe-inline'", "https://hcaptcha.com", "https://*.hcaptcha.com"],
@@ -141,7 +141,7 @@ app.post('/request-kibl', ipLimiter, async (req, res, next) => {
         logger.info('Success response:', { response: successResponse });
         addressRateLimit.set(sanitizedAddress, now);
         ipAddressLimit.set(ipAddressKey, now);
-        return res.json(successResponse);
+        res.json(successResponse);
       } catch (error) {
         logger.error(`Attempt ${attempt} failed at ${new Date().toISOString()}:`, { error });
         if (attempt === 3) throw error;
