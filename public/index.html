@@ -149,15 +149,22 @@
     <div id="loading" aria-live="polite">Processing your request...</div>
     <p id="result" aria-live="polite"></p>
     <audio id="feedSound" src="dogfood.mp3"></audio>
-    <a href="https://pixelpupsgame.com" target="_blank" class="community-link" aria-label="Join the KennelKlub community">Join the PixelPups Community!</a>
+    <a href="https://pixelpupsgame.com" target="_blank" class="community-link" aria-label="Join the PixelPups community">Join the PixelPups Community!</a>
   </div>
   <script>
-    // Load confetti and wait for it
-    let confettiReady = new Promise((resolve) => {
+    // Load confetti with fallback and wait for it
+    let confettiReady = new Promise((resolve, reject) => {
       const confettiScript = document.createElement('script');
       confettiScript.src = 'https://cdnjs.cloudflare.com/ajax/libs/canvas-confetti/1.6.0/confetti.browser.min.js';
       confettiScript.onload = () => resolve(true);
-      confettiScript.onerror = () => resolve(false);
+      confettiScript.onerror = () => {
+        console.error('CDN failed, trying local fallback');
+        const fallbackScript = document.createElement('script');
+        fallbackScript.src = '/confetti.browser.min.js'; // Add this file to public if needed
+        fallbackScript.onload = () => resolve(true);
+        fallbackScript.onerror = () => reject(new Error('Both CDN and fallback failed'));
+        document.head.appendChild(fallbackScript);
+      };
       document.head.appendChild(confettiScript);
     });
 
@@ -179,6 +186,10 @@
       loading.style.display = 'block';
       let data;
       try {
+        const confettiLoaded = await confettiReady;
+        if (!confettiLoaded) {
+          console.warn('Confetti failed to load, animation skipped');
+        }
         const response = await fetch('/request-kibl', {
           method: 'POST',
           headers: { 'Content-Type': 'application/json' },
@@ -192,7 +203,6 @@
         }
         result.innerText = data.error || data.message;
         result.className = data.error ? 'error' : 'success';
-        const confettiLoaded = await confettiReady;
         if (data.success === true && confettiLoaded) {
           feedSound.play();
           confetti({
@@ -202,8 +212,6 @@
           });
         } else if (data.error) {
           console.warn('Error response:', data.error);
-        } else if (!confettiLoaded) {
-          console.warn('Confetti not loaded, skipping animation');
         }
       } catch (error) {
         console.error('Fetch or parsing error:', error);
