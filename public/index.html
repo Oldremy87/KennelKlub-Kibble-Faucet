@@ -112,10 +112,6 @@
     }
   </style>
 </head>
-<link rel="apple-touch-icon" sizes="180x180" href="/apple-touch-icon.png">
-<link rel="icon" type="image/png" sizes="32x32" href="/favicon-32x32.png">
-<link rel="icon" type="image/png" sizes="16x16" href="/favicon-16x16.png">
-<link rel="manifest" href="/site.webmanifest">
 <body>
   <div class="container" role="main">
     <h1>KennelKlub KIBL Faucet</h1>
@@ -132,26 +128,24 @@
     <a href="https://pixelpupsgame.com" target="_blank" class="community-link" aria-label="Join the PixelPups community">Join the PixelPups Community!</a>
   </div>
   <script>
+    // Initialize particles.js globally
+    if (typeof particlesJS === 'function') {
+      particlesJS.load('particles-js', '/particles.json', () => {
+        console.log('particles.js initialized');
+        window.pJSDom = window.pJSDom || [];
+        window.pJSDom.push({ pJS: null }); // Ensure pJS is accessible
+      });
+    } else {
+      console.error('particles.js not loaded');
+    }
+
     const addressInput = document.getElementById('addressInput');
     const submitButton = document.getElementById('submitButton');
     const loading = document.getElementById('loading');
     const result = document.getElementById('result');
     const feedSound = document.getElementById('feedSound');
-    let pJS;
 
-    // Initialize particles.js
-    document.addEventListener('DOMContentLoaded', () => {
-      if (typeof particlesJS === 'function') {
-        particlesJS.load('particles-js', '/particles.json', () => {
-          console.log('particles.js loaded');
-          pJS = window.pJSDom[0].pJS;
-        });
-      } else {
-        console.error('particles.js not found');
-      }
-    });
-
-    async function requestTokens() {
+    function requestTokens() { // Changed to function declaration for hoisting
       const address = addressInput.value.trim();
       const captchaToken = document.querySelector('textarea[name="h-captcha-response"]').value;
       if (!captchaToken) {
@@ -161,54 +155,60 @@
       }
       submitButton.disabled = true;
       loading.style.display = 'block';
-      try {
-        const response = await fetch('/request-kibl', {
-          method: 'POST',
-          headers: { 'Content-Type': 'application/json' },
-          body: JSON.stringify({ address, 'h-captcha-response': captchaToken }),
-        });
-        const data = await response.json();
-        console.log('Fetch response:', response);
-        console.log('Parsed data:', data);
-        result.innerText = data.error || data.message;
-        result.className = data.error ? 'error' : 'success';
-        if (!data.error && pJS) {
-          feedSound.play();
-          pJS.fn.vendors.destroypJS();
-          particlesJS('particles-js', {
-            particles: {
-              number: { value: 25, density: { enable: true, value_area: 800 } },
-              color: { value: ['#ffcc00', '#e6b800', '#fff'] },
-              shape: {
-                type: 'image',
-                stroke: { width: 0, color: '#000000' },
-                image: { src: '/pawprint.svg', width: 32, height: 40 }
+      fetch('/request-kibl', {
+        method: 'POST',
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify({ address, 'h-captcha-response': captchaToken }),
+      })
+        .then(response => {
+          if (!response.ok) throw new Error(`HTTP error! status: ${response.status}`);
+          return response.json();
+        })
+        .then(data => {
+          console.log('Fetch response:', response);
+          console.log('Parsed data:', data);
+          result.innerText = data.error || data.message;
+          result.className = data.error ? 'error' : 'success';
+          if (!data.error && window.pJSDom && window.pJSDom[0].pJS) {
+            feedSound.play();
+            const pJS = window.pJSDom[0].pJS;
+            pJS.fn.vendors.destroypJS();
+            particlesJS('particles-js', {
+              particles: {
+                number: { value: 25, density: { enable: true, value_area: 800 } },
+                color: { value: ['#ffcc00', '#e6b800', '#fff'] },
+                shape: {
+                  type: 'image',
+                  stroke: { width: 0, color: '#000000' },
+                  image: { src: '/pawprint.svg', width: 32, height: 40 }
+                },
+                opacity: { value: 1, random: false, anim: { enable: false } },
+                size: { value: 20, random: true, anim: { enable: false } },
+                line_linked: { enable: false },
+                move: {
+                  enable: true,
+                  speed: 6,
+                  direction: 'top',
+                  random: false,
+                  straight: true,
+                  out_mode: 'out',
+                  bounce: false
+                }
               },
-              opacity: { value: 1, random: false, anim: { enable: false } },
-              size: { value: 20, random: true, anim: { enable: false } },
-              line_linked: { enable: false },
-              move: {
-                enable: true,
-                speed: 6,
-                direction: 'top',
-                random: false,
-                straight: true,
-                out_mode: 'out',
-                bounce: false
-              }
-            },
-            interactivity: { detect_on: 'canvas', events: { onclick: { enable: false } } },
-            retina_detect: true
-          });
-        }
-      } catch (error) {
-        console.error('Fetch error:', error);
-        result.innerText = 'An error occurred. Please try again.';
-        result.className = 'error';
-      } finally {
-        submitButton.disabled = false;
-        loading.style.display = 'none';
-      }
+              interactivity: { detect_on: 'canvas', events: { onclick: { enable: false } } },
+              retina_detect: true
+            });
+          }
+        })
+        .catch(error => {
+          console.error('Fetch error:', error);
+          result.innerText = 'An error occurred. Please try again.';
+          result.className = 'error';
+        })
+        .finally(() => {
+          submitButton.disabled = false;
+          loading.style.display = 'none';
+        });
     }
 
     addressInput.addEventListener('input', () => {
