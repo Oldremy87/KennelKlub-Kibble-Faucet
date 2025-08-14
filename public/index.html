@@ -137,22 +137,20 @@
     }
   </style>
 </head>
-<link rel="apple-touch-icon" sizes="180x180" href="/apple-touch-icon.png">
-<link rel="icon" type="image/png" sizes="32x32" href="/favicon-32x32.png">
-<link rel="icon" type="image/png" sizes="16x16" href="/favicon-16x16.png">
-<link rel="manifest" href="/site.webmanifest">
 <body>
-  <div class="container">
+  <div class="container" role="main">
     <h1>KennelKlub KIBL Faucet</h1>
     <p>Get 1000 KIBL for the PixelPup Video Poker Game – Launching Soon!</p>
     <img src="pixelpup.png" alt="PixelPup Artwork" class="pixelpup-image">
-    <input type="text" id="addressInput" placeholder="Enter your Nexa testnet address">
+    <input type="text" id="addressInput" placeholder="Enter your Nexa testnet address" aria-label="Nexa testnet address input">
     <div class="h-captcha" data-sitekey="d4801768-d9cc-48aa-beb0-bfb00d969b18"></div>
-    <button id="submitButton" onclick="requestTokens()">FEED ME!</button>
-    <div id="loading">Processing your request...</div>
-    <p id="result"></p>
+    <button id="submitButton" onclick="requestTokens()" aria-label="Request 1000 KIBL tokens">
+      FEED ME!
+    </button>
+    <div id="loading" aria-live="polite">Processing your request...</div>
+    <p id="result" aria-live="polite"></p>
     <audio id="feedSound" src="dogfood.mp3"></audio>
-    <a href="https://pixelpupsgame.com" target="_blank" class="community-link">Join the PixelPups Community!</a>
+    <a href="https://pixelpupsgame.com" target="_blank" class="community-link" aria-label="Join the PixelPups community">Join the PixelPups Community!</a>
   </div>
   <script>
     const addressInput = document.getElementById('addressInput');
@@ -178,17 +176,26 @@
           body: JSON.stringify({ address, 'h-captcha-response': captchaToken }),
         });
         const data = await response.json();
+        console.log('Fetch response:', response);
+        console.log('Parsed data:', data);
         result.innerText = data.error || data.message;
         result.className = data.error ? 'error' : 'success';
-        if (!data.error) {
+        if (data.success) {
           feedSound.play();
-          confetti({
-            particleCount: 100,
-            spread: 70,
-            origin: { y: 0.6 }
-          });
+          if (typeof confetti === 'function') {
+            confetti({
+              particleCount: 100,
+              spread: 70,
+              origin: { y: 0.6 }
+            });
+          } else {
+            console.warn('Confetti not loaded');
+          }
+        } else if (data.error) {
+          console.warn('Error response:', data.error);
         }
       } catch (error) {
+        console.error('Fetch error:', error);
         result.innerText = 'An error occurred. Please try again.';
         result.className = 'error';
       } finally {
@@ -197,7 +204,6 @@
       }
     }
 
-    // Add input validation feedback
     addressInput.addEventListener('input', () => {
       if (addressInput.value.trim() && !/^(nexa|nexatest):/.test(addressInput.value.trim())) {
         addressInput.style.borderColor = '#dc3545';

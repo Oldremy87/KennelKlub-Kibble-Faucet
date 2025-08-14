@@ -133,9 +133,15 @@ app.post('/request-kibl', ipLimiter, async (req, res, next) => {
           throw new Error(data.error.message || 'Unknown RPC error');
         }
         const txId = data.result;
+        const successResponse = {
+          success: true,
+          txId: txId,
+          message: `Sent 1000 KIBL to ${sanitizedAddress}`
+        };
+        logger.info('Success response:', { response: successResponse });
         addressRateLimit.set(sanitizedAddress, now);
         ipAddressLimit.set(ipAddressKey, now);
-        return res.json({ success: true, txId, message: 'Sent 1000 KIBL to ' + sanitizedAddress });
+        return res.json(successResponse);
       } catch (error) {
         logger.error(`Attempt ${attempt} failed at ${new Date().toISOString()}:`, { error });
         if (attempt === 3) throw error;
