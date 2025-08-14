@@ -64,7 +64,7 @@ app.post('/request-kibl', ipLimiter, async (req, res, next) => {
   }
 
   try {
-    const captchaResponse = await hcaptcha.verify(process.env.HCAPTCHA_SECRET, captchaToken);
+    const captchaResponse = await hcaptcha.verify(process.env.HCAPTCHA_SECRET,  captchaToken);
     if (!captchaResponse.success) {
       logger.warn('hCaptcha verification failed');
       return res.status(400).json({ error: 'hCaptcha verification failed!' });
@@ -93,8 +93,8 @@ app.post('/request-kibl', ipLimiter, async (req, res, next) => {
   if (ipAddressLimit.has(ipAddressKey) && (now - ipAddressLimit.get(ipAddressKey)) < 4 * 60 * 60 * 1000) {
     return res.status(429).json({ error: 'IP and address combination rate limit exceeded. Try again in 4 hours.' });
   }
-  if (addressRateLimit.has(sanitizedAddress) && (now - addressRateLimit.get(sanitizedAddress)) < 24 * 60 * 60 * 1000) {
-    return res.status(429).json({ error: 'Address rate limit exceeded. Try again in 24 hours.' });
+  if (addressRateLimit.has(sanitizedAddress) && (now - addressRateLimit.get(sanitizedAddress)) < 4 * 60 * 60 * 1000) {
+    return res.status(429).json({ error: 'Address rate limit exceeded. Try again in 4 hours.' });
   }
 
   try {
