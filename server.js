@@ -24,7 +24,7 @@ app.use(helmet({
   contentSecurityPolicy: {
     directives: {
       defaultSrc: ["'self'"],
-      scriptSrc: ["'self'", "'unsafe-inline'", "https://hcaptcha.com", "https://*.hcaptcha.com"],
+      scriptSrc: ["'self'", "'unsafe-inline'", "https://hcaptcha.com", "https://*.hcaptcha.com", "https://cdnjs.cloudflare.com"],
       scriptSrcAttr: ["'self'", "'unsafe-inline'"],
       connectSrc: ["'self'", "https://346d614067e1.ngrok-free.app", "https://hcaptcha.com", "https://*.hcaptcha.com"],
       styleSrc: ["'self'", "'unsafe-inline'", "https://hcaptcha.com", "https://*.hcaptcha.com"],
@@ -58,20 +58,27 @@ const ipAddressLimit = new Map();
 app.post('/request-kibl', ipLimiter, async (req, res, next) => {
   logger.info('POST /request-kibl received at:', { timestamp: new Date().toISOString(), rawBody: req.body });
   const { address, 'h-captcha-response': captchaToken } = req.body;
+  logger.info('hCaptcha token received:', { captchaToken });
   if (!captchaToken) {
     logger.warn('Missing hCaptcha token');
     return res.status(400).json({ error: 'Please complete the hCaptcha challenge!' });
   }
 
-  try {
-    const captchaResponse = await hcaptcha.verify(process.env.HCAPTCHA_SECRET,  captchaToken);
-    if (!captchaResponse.success) {
-      logger.warn('hCaptcha verification failed');
-      return res.status(400).json({ error: 'hCaptcha verification failed!' });
+  let captchaResponse;
+  for (let attempt = 1; attempt <= 3; attempt++) {
+    try {
+      captchaResponse = await hcaptcha.verify(process.env.HCAPTCHA_SECRET, captchaToken, { host: 'https://hcaptcha.com' });
+      logger.info('hCaptcha verification response (attempt ' + attempt + '):', { success: captchaResponse.success, errorCodes: captchaResponse['error-codes'] });
+      break;
+    } catch (error) {
+      logger.error('hCaptcha verification error (attempt ' + attempt + '):', { error });
+      if (attempt === 3) throw error;
+      await new Promise(resolve => setTimeout(resolve, 1000 * attempt));
     }
-  } catch (error) {
-    logger.error('hCaptcha verification error:', { error });
-    return res.status(500).json({ error: 'hCaptcha service error. Try again later.' });
+  }
+  if (!captchaResponse.success) {
+    logger.warn('hCaptcha verification failed after retries', { errorCodes: captchaResponse['error-codes'] });
+    return res.status(400).json({ error: 'hCaptcha verification failed! Error: ' + (captchaResponse['error-codes'] || 'Unknown') });
   }
   next();
 }, async (req, res) => {
@@ -93,7 +100,7 @@ app.post('/request-kibl', ipLimiter, async (req, res, next) => {
   if (ipAddressLimit.has(ipAddressKey) && (now - ipAddressLimit.get(ipAddressKey)) < 4 * 60 * 60 * 1000) {
     return res.status(429).json({ error: 'IP and address combination rate limit exceeded. Try again in 4 hours.' });
   }
-  if (addressRateLimit.has(sanitizedAddress) && (now - addressRateLimit.get(sanitizedAddress)) < 4 * 60 * 60 * 1000) {
+  if (addressRateLimit.has(sanitizedAddress) && (now - addressRateLimit.get(sanitizedAddress)) < 4 * 60 * 60 * 1000) { // Updated to 4 hours
     return res.status(429).json({ error: 'Address rate limit exceeded. Try again in 4 hours.' });
   }
 
