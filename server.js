@@ -24,11 +24,12 @@ app.use(helmet({
   contentSecurityPolicy: {
     directives: {
       defaultSrc: ["'self'"],
-      scriptSrc: ["'self'", "'unsafe-inline'", "https://hcaptcha.com", "https://*.hcaptcha.com", "https://*.cloudflare.com", "https://speedcf.cloudflareaccess.com", "https://cdnjs.cloudflare.com"],
+      scriptSrc: ["'self'", "'unsafe-inline'", "https://hcaptcha.com", "https://*.hcaptcha.com"],
       scriptSrcAttr: ["'self'", "'unsafe-inline'"],
       connectSrc: ["'self'", "https://346d614067e1.ngrok-free.app", "https://hcaptcha.com", "https://*.hcaptcha.com"],
       styleSrc: ["'self'", "'unsafe-inline'", "https://hcaptcha.com", "https://*.hcaptcha.com"],
-      frameSrc: ["'self'", "https://hcaptcha.com", "https://*.hcaptcha.com"]
+      frameSrc: ["'self'", "https://hcaptcha.com", "https://*.hcaptcha.com"],
+      imgSrc: ["'self'", "data:"] // Allow local and data URLs for paw print SVG
     }
   }
 }));
@@ -141,8 +142,7 @@ app.post('/request-kibl', ipLimiter, async (req, res, next) => {
         logger.info('Success response:', { response: successResponse });
         addressRateLimit.set(sanitizedAddress, now);
         ipAddressLimit.set(ipAddressKey, now);
-        res.json(successResponse);
-        break; // Exit loop on first success
+        return res.json(successResponse);
       } catch (error) {
         logger.error(`Attempt ${attempt} failed at ${new Date().toISOString()}:`, { error });
         if (attempt === 3) throw error;
