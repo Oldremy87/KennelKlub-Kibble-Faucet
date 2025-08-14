@@ -5,40 +5,54 @@
   <meta name="viewport" content="width=device-width, initial-scale=1.0">
   <title>KennelKlub KIBL Faucet</title>
   <script src="https://hcaptcha.com/1/api.js" async defer></script>
+  <script src="https://cdnjs.cloudflare.com/ajax/libs/canvas-confetti/1.6.0/confetti.browser.min.js"></script>
   <style>
     body {
       font-family: 'Arial', sans-serif;
-      text-align: center;
-      padding: 50px;
-      background: linear-gradient(135deg, #f5f7fa 0%, #c3cfe2 100%);
       margin: 0;
-      height: 100vh;
+      padding: 0;
+      min-height: 100vh;
       display: flex;
       justify-content: center;
       align-items: center;
+      background: linear-gradient(135deg, #f5f7fa 0%, #c3cfe2 100%);
       color: #333;
     }
     .container {
-      max-width: 500px;
       background: white;
-      padding: 40px;
+      padding: 30px;
       border-radius: 15px;
-      box-shadow: 0 4px 8px rgba(0, 0, 0, 0.1);
-      border: 2px solid #ffcc00;
+      box-shadow: 0 6px 12px rgba(0, 0, 0, 0.1);
+      border: 3px solid #ffcc00;
+      max-width: 500px;
+      text-align: center;
+      animation: fadeIn 1s ease-in;
+    }
+    @keyframes fadeIn {
+      from { opacity: 0; }
+      to { opacity: 1; }
     }
     h1 {
-      font-size: 2.2em;
+      font-size: 2.5em;
       margin-bottom: 15px;
+      color: #ffcc00;
+      font-weight: bold;
+      text-shadow: 1px 1px 2px rgba(0, 0, 0, 0.1);
     }
     p {
-      font-size: 1.2em;
-      margin-bottom: 25px;
+      font-size: 1.1em;
+      margin-bottom: 20px;
+      color: #555;
     }
     .pixelpup-image {
       max-width: 250px;
-      margin-bottom: 25px;
+      margin-bottom: 20px;
       border-radius: 10px;
-      box-shadow: 0 2px 4px rgba(0, 0, 0, 0.1);
+      box-shadow: 0 4px 8px rgba(0, 0, 0, 0.1);
+      transition: transform 0.3s ease;
+    }
+    .pixelpup-image:hover {
+      transform: scale(1.05);
     }
     input {
       padding: 12px;
@@ -47,6 +61,14 @@
       border: 2px solid #ffcc00;
       border-radius: 5px;
       font-size: 1.1em;
+      transition: border-color 0.3s ease;
+    }
+    input:focus {
+      border-color: #e6b800;
+      outline: none;
+    }
+    .h-captcha {
+      margin: 15px 0;
     }
     button {
       padding: 12px 30px;
@@ -57,7 +79,7 @@
       font-size: 1.3em;
       cursor: pointer;
       position: relative;
-      transition: background 0.3s ease;
+      transition: background 0.3s ease, transform 0.2s ease;
     }
     button::after {
       content: "🐾";
@@ -66,57 +88,119 @@
     }
     button:hover {
       background: #e6b800;
+      transform: translateY(-2px);
     }
-    .h-captcha {
-      margin: 15px 0;
+    button:disabled {
+      background: #ccc;
+      cursor: not-allowed;
     }
     #result {
       margin-top: 20px;
       font-size: 1.2em;
+      transition: opacity 0.5s ease;
+    }
+    #result.success {
       color: #28a745;
     }
     #result.error {
       color: #dc3545;
     }
+    #loading {
+      display: none;
+      margin: 10px 0;
+      font-style: italic;
+      color: #666;
+    }
+    .community-link {
+      margin-top: 20px;
+      font-size: 0.9em;
+      color: #007bff;
+      text-decoration: none;
+    }
+    .community-link:hover {
+      text-decoration: underline;
+    }
     audio {
       display: none;
+    }
+    @media (max-width: 600px) {
+      .container {
+        padding: 20px;
+        width: 90%;
+      }
+      h1 {
+        font-size: 2em;
+      }
+      .pixelpup-image {
+        max-width: 200px;
+      }
     }
   </style>
 </head>
 <body>
   <div class="container">
     <h1>KennelKlub KIBL Faucet</h1>
-    <p>Get 1000 KIBL for the upcoming PixelPup Video Poker game! Launching soon - stay tuned!</p>
+    <p>Get 1000 KIBL for the PixelPup Video Poker Game – Launching Soon!</p>
     <img src="pixelpup.png" alt="PixelPup Artwork" class="pixelpup-image">
-    <input type="text" id="addressInput" placeholder="Enter your Nexa address">
+    <input type="text" id="addressInput" placeholder="Enter your Nexa testnet address">
     <div class="h-captcha" data-sitekey="d4801768-d9cc-48aa-beb0-bfb00d969b18"></div>
-    <button onclick="requestTokens()">FEED ME!</button>
+    <button id="submitButton" onclick="requestTokens()">FEED ME!</button>
+    <div id="loading">Processing your request...</div>
     <p id="result"></p>
     <audio id="feedSound" src="dogfood.mp3"></audio>
+    <a href="https://pixelpupsgame.com" target="_blank" class="community-link">Join the PixelPups Community!</a>
   </div>
   <script>
+    const addressInput = document.getElementById('addressInput');
+    const submitButton = document.getElementById('submitButton');
+    const loading = document.getElementById('loading');
+    const result = document.getElementById('result');
+    const feedSound = document.getElementById('feedSound');
+
     async function requestTokens() {
-      const address = document.getElementById('addressInput').value.trim();
+      const address = addressInput.value.trim();
       const captchaToken = document.querySelector('textarea[name="h-captcha-response"]').value;
-      const result = document.getElementById('result');
-      const feedSound = document.getElementById('feedSound');
       if (!captchaToken) {
         result.innerText = 'Please complete the hCaptcha challenge!';
         result.className = 'error';
         return;
       }
-      const response = await fetch('/request-kibl', {
-        method: 'POST',
-        headers: { 'Content-Type': 'application/json' },
-        body: JSON.stringify({ address, 'h-captcha-response': captchaToken }),
-      });
-      const data = await response.json();
-      result.innerText = data.error || data.message;
-      result.className = data.error ? 'error' : '';
-      if (!data.error) {
-        feedSound.play();
+      submitButton.disabled = true;
+      loading.style.display = 'block';
+      try {
+        const response = await fetch('/request-kibl', {
+          method: 'POST',
+          headers: { 'Content-Type': 'application/json' },
+          body: JSON.stringify({ address, 'h-captcha-response': captchaToken }),
+        });
+        const data = await response.json();
+        result.innerText = data.error || data.message;
+        result.className = data.error ? 'error' : 'success';
+        if (!data.error) {
+          feedSound.play();
+          confetti({
+            particleCount: 100,
+            spread: 70,
+            origin: { y: 0.6 }
+          });
+        }
+      } catch (error) {
+        result.innerText = 'An error occurred. Please try again.';
+        result.className = 'error';
+      } finally {
+        submitButton.disabled = false;
+        loading.style.display = 'none';
       }
     }
+
+    // Add input validation feedback
+    addressInput.addEventListener('input', () => {
+      if (addressInput.value.trim() && !/^(nexa|nexatest):/.test(addressInput.value.trim())) {
+        addressInput.style.borderColor = '#dc3545';
+      } else {
+        addressInput.style.borderColor = '#ffcc00';
+      }
+    });
   </script>
 </body>
 </html>
