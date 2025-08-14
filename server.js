@@ -1,5 +1,6 @@
 require('dotenv').config();
 const express = require('express');
+const path = require('path');
 const fetch = (...args) => import('node-fetch').then(({ default: fetch }) => fetch(...args));
 const helmet = require('helmet');
 const validator = require('validator');
@@ -37,7 +38,19 @@ app.use((req, res, next) => {
   logger.info('Incoming request:', { method: req.method, url: req.url, ip: req.ip, timestamp: new Date().toISOString() });
   next();
 });
-app.use(express.static('public'));
+
+// Custom static middleware to enforce MIME types
+app.use(express.static('public', {
+  setHeaders: (res, path) => {
+    if (path.endsWith('.js')) {
+      res.set('Content-Type', 'application/javascript');
+    } else if (path.endsWith('.svg')) {
+      res.set('Content-Type', 'image/svg+xml');
+    } else if (path.endsWith('.ico')) {
+      res.set('Content-Type', 'image/x-icon');
+    }
+  }
+}));
 
 // Rate limiting (1 request per IP per 4 hours)
 const ipLimiter = rateLimit({
@@ -82,7 +95,7 @@ app.post('/request-kibl', ipLimiter, async (req, res, next) => {
     return res.status(400).json({ error: 'hCaptcha verification failed! Error: ' + (captchaResponse['error-codes'] || 'Unknown') });
   }
   next();
-}, async (req, res) => {
+}, (req, res) => {
   const { address } = req.body;
   logger.info('Processing raw address:', { address });
   const sanitizedAddress = validator.trim(address);
