@@ -8,37 +8,50 @@
   <style>
     body {
       font-family: 'Arial', sans-serif;
-      text-align: center;
-      padding: 50px;
-      background: linear-gradient(135deg, #f5f7fa 0%, #c3cfe2 100%);
       margin: 0;
-      height: 100vh;
+      padding: 0;
+      min-height: 100vh;
       display: flex;
       justify-content: center;
       align-items: center;
+      background: linear-gradient(135deg, #f5f7fa 0%, #c3cfe2 100%);
       color: #333;
     }
     .container {
-      max-width: 500px;
       background: white;
-      padding: 40px;
+      padding: 30px;
       border-radius: 15px;
-      box-shadow: 0 4px 8px rgba(0, 0, 0, 0.1);
-      border: 2px solid #ffcc00;
+      box-shadow: 0 6px 12px rgba(0, 0, 0, 0.1);
+      border: 3px solid #ffcc00;
+      max-width: 500px;
+      text-align: center;
+      animation: fadeIn 1s ease-in;
+    }
+    @keyframes fadeIn {
+      from { opacity: 0; }
+      to { opacity: 1; }
     }
     h1 {
-      font-size: 2.2em;
+      font-size: 2.5em;
       margin-bottom: 15px;
+      color: #ffcc00;
+      font-weight: bold;
+      text-shadow: 1px 1px 2px rgba(0, 0, 0, 0.1);
     }
     p {
-      font-size: 1.2em;
-      margin-bottom: 25px;
+      font-size: 1.1em;
+      margin-bottom: 20px;
+      color: #555;
     }
     .pixelpup-image {
       max-width: 250px;
-      margin-bottom: 25px;
+      margin-bottom: 20px;
       border-radius: 10px;
-      box-shadow: 0 2px 4px rgba(0, 0, 0, 0.1);
+      box-shadow: 0 4px 8px rgba(0, 0, 0, 0.1);
+      transition: transform 0.3s ease;
+    }
+    .pixelpup-image:hover {
+      transform: scale(1.05);
     }
     input {
       padding: 12px;
@@ -47,6 +60,14 @@
       border: 2px solid #ffcc00;
       border-radius: 5px;
       font-size: 1.1em;
+      transition: border-color 0.3s ease;
+    }
+    input:focus {
+      border-color: #e6b800;
+      outline: none;
+    }
+    .h-captcha {
+      margin: 15px 0;
     }
     button {
       padding: 12px 30px;
@@ -57,7 +78,7 @@
       font-size: 1.3em;
       cursor: pointer;
       position: relative;
-      transition: background 0.3s ease;
+      transition: background 0.3s ease, transform 0.2s ease;
     }
     button::after {
       content: "🐾";
@@ -66,6 +87,7 @@
     }
     button:hover {
       background: #e6b800;
+      transform: translateY(-2px);
     }
     button:disabled {
       background: #ccc;
@@ -74,6 +96,9 @@
     #result {
       margin-top: 20px;
       font-size: 1.2em;
+      transition: opacity 0.5s ease;
+    }
+    #result.success {
       color: #28a745;
     }
     #result.error {
@@ -127,6 +152,15 @@
     <a href="https://pixelpupsgame.com" target="_blank" class="community-link" aria-label="Join the PixelPups community">Join the PixelPups Community!</a>
   </div>
   <script>
+    // Load confetti and wait for it
+    let confettiReady = new Promise((resolve) => {
+      const confettiScript = document.createElement('script');
+      confettiScript.src = 'https://cdnjs.cloudflare.com/ajax/libs/canvas-confetti/1.6.0/confetti.browser.min.js';
+      confettiScript.onload = () => resolve(true);
+      confettiScript.onerror = () => resolve(false);
+      document.head.appendChild(confettiScript);
+    });
+
     const addressInput = document.getElementById('addressInput');
     const submitButton = document.getElementById('submitButton');
     const loading = document.getElementById('loading');
@@ -143,22 +177,36 @@
       }
       submitButton.disabled = true;
       loading.style.display = 'block';
+      let data;
       try {
         const response = await fetch('/request-kibl', {
           method: 'POST',
           headers: { 'Content-Type': 'application/json' },
           body: JSON.stringify({ address, 'h-captcha-response': captchaToken }),
         });
-        const data = await response.json();
-        console.log('Fetch response:', response);
+        data = await response.json();
+        console.log('Fetch response:', { status: response.status, ok: response.ok });
         console.log('Parsed data:', data);
+        if (!response.ok) {
+          throw new Error(`HTTP error! status: ${response.status}`);
+        }
         result.innerText = data.error || data.message;
         result.className = data.error ? 'error' : 'success';
-        if (!data.error) {
+        const confettiLoaded = await confettiReady;
+        if (data.success === true && confettiLoaded) {
           feedSound.play();
+          confetti({
+            particleCount: 100,
+            spread: 70,
+            origin: { y: 0.6 }
+          });
+        } else if (data.error) {
+          console.warn('Error response:', data.error);
+        } else if (!confettiLoaded) {
+          console.warn('Confetti not loaded, skipping animation');
         }
       } catch (error) {
-        console.error('Fetch error:', error);
+        console.error('Fetch or parsing error:', error);
         result.innerText = 'An error occurred. Please try again.';
         result.className = 'error';
       } finally {
