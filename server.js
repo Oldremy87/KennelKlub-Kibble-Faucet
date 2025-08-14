@@ -24,7 +24,7 @@ app.use(helmet({
   contentSecurityPolicy: {
     directives: {
       defaultSrc: ["'self'"],
-      scriptSrc: ["'self'", "'unsafe-inline'", "https://hcaptcha.com", "https://*.hcaptcha.com", "https://cdnjs.cloudflare.com"],
+      scriptSrc: ["'self'", "'unsafe-inline'", "https://hcaptcha.com", "https://*.hcaptcha.com", "https://cdnjs.cloudflare.com", "https://*.cloudflare.com", "https://speedcf.cloudflareaccess.com"],
       scriptSrcAttr: ["'self'", "'unsafe-inline'"],
       connectSrc: ["'self'", "https://346d614067e1.ngrok-free.app", "https://hcaptcha.com", "https://*.hcaptcha.com"],
       styleSrc: ["'self'", "'unsafe-inline'", "https://hcaptcha.com", "https://*.hcaptcha.com"],
@@ -100,7 +100,7 @@ app.post('/request-kibl', ipLimiter, async (req, res, next) => {
   if (ipAddressLimit.has(ipAddressKey) && (now - ipAddressLimit.get(ipAddressKey)) < 4 * 60 * 60 * 1000) {
     return res.status(429).json({ error: 'IP and address combination rate limit exceeded. Try again in 4 hours.' });
   }
-  if (addressRateLimit.has(sanitizedAddress) && (now - addressRateLimit.get(sanitizedAddress)) < 4 * 60 * 60 * 1000) { // Updated to 4 hours
+  if (addressRateLimit.has(sanitizedAddress) && (now - addressRateLimit.get(sanitizedAddress)) < 4 * 60 * 60 * 1000) {
     return res.status(429).json({ error: 'Address rate limit exceeded. Try again in 4 hours.' });
   }
 
