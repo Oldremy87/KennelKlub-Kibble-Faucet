@@ -104,9 +104,9 @@ app.post('/request-kibl', ipLimiter, async (req, res, next) => {
     logger.warn('Address is empty:', { sanitizedAddress });
     return res.status(400).json({ error: 'Address cannot be empty!' });
   }
-  if (!Address.isValid(sanitizedAddress, Networks.testnet)) {
+  if (!Address.isValid(sanitizedAddress, Networks.nexa)) {
     logger.warn('Address validation failed:', { sanitizedAddress });
-    return res.status(400).json({ error: 'Invalid Nexa testnet address! Please check your address and try again.' });
+    return res.status(400).json({ error: 'Invalid Nexa address! Please check your address and try again.' });
   }
 
   const now = Date.now();
