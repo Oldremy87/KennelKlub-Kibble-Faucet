@@ -126,7 +126,7 @@ app.post('/request-kibl', ipLimiter, async (req, res, next) => {
       jsonrpc: "1.0",
       id: "curltest",
       method: "token",
-      params: ["send", process.env.KIBL_GROUP_ID, sanitizedAddress, 1000 * Math.pow(10, 8)]
+      params: ["send", process.env.KIBL_GROUP_ID, sanitizedAddress, 1000 * Math.pow(10, 2)]
     });
     logger.info('RPC request body:', { body });
 
