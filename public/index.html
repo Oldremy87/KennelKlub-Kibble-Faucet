@@ -18,6 +18,7 @@
       justify-content: center;
       align-items: center;
       color: #333;
+      position: relative; /* For particles canvas positioning */
     }
     .container {
       max-width: 500px;
@@ -26,6 +27,16 @@
       border-radius: 15px;
       box-shadow: 0 4px 8px rgba(0, 0, 0, 0.1);
       border: 2px solid #ffcc00;
+      position: relative; /* Ensure content stays above particles */
+      z-index: 1;
+    }
+    .particles-js {
+      position: absolute;
+      top: 0;
+      left: 0;
+      width: 100%;
+      height: 100%;
+      z-index: 0;
     }
     h1 {
       font-size: 2.2em;
@@ -113,6 +124,7 @@
   </style>
 </head>
 <body>
+  <div class="particles-js"></div> <!-- Required for particles.js canvas -->
   <div class="container" role="main">
     <h1>KennelKlub KIBL Faucet</h1>
     <p>Get 1000 KIBL for the PixelPup Video Poker Game – Launching Soon!</p>
@@ -128,11 +140,11 @@
     <a href="https://pixelpupsgame.com" target="_blank" class="community-link" aria-label="Join the PixelPups community">Join the PixelPups Community!</a>
   </div>
   <script>
-    // Initialize particles.js globally
+    // Initialize particles.js globally with default config
     if (typeof particlesJS === 'function') {
       particlesJS({
         particles: {
-          number: { value: 25, density: { enable: true, value_area: 800 } },
+          number: { value: 0, density: { enable: false } }, // Start with no particles
           color: { value: ['#ffcc00', '#e6b800', '#fff'] },
           shape: {
             type: 'image',
@@ -161,6 +173,7 @@
       console.error('particles.js not loaded');
     }
 
+    // Declare variables at the top to avoid initialization issues
     const addressInput = document.getElementById('addressInput');
     const submitButton = document.getElementById('submitButton');
     const loading = document.getElementById('loading');
@@ -187,37 +200,41 @@
           return response.json();
         })
         .then(data => {
-          console.log('Fetch response:', { status: response.status, ok: response.ok }); // Fixed scope issue
+          console.log('Fetch response:', { status: response.status, ok: response.ok });
           console.log('Parsed data:', data);
           result.innerText = data.error || data.message;
           result.className = data.error ? 'error' : 'success';
           if (!data.error && typeof particlesJS === 'function') {
             feedSound.play();
-            particlesJS({
-              particles: {
-                number: { value: 25, density: { enable: true, value_area: 800 } },
-                color: { value: ['#ffcc00', '#e6b800', '#fff'] },
-                shape: {
-                  type: 'image',
-                  stroke: { width: 0, color: '#000000' },
-                  image: { src: '/pawprint.svg', width: 32, height: 40 }
+            const pJS = window.pJSDom[0].pJS;
+            if (pJS) {
+              pJS.fn.vendors.destroypJS();
+              particlesJS('particles-js', {
+                particles: {
+                  number: { value: 25, density: { enable: true, value_area: 800 } },
+                  color: { value: ['#ffcc00', '#e6b800', '#fff'] },
+                  shape: {
+                    type: 'image',
+                    stroke: { width: 0, color: '#000000' },
+                    image: { src: '/pawprint.svg', width: 32, height: 40 }
+                  },
+                  opacity: { value: 1, random: false, anim: { enable: false } },
+                  size: { value: 20, random: true, anim: { enable: false } },
+                  line_linked: { enable: false },
+                  move: {
+                    enable: true,
+                    speed: 6,
+                    direction: 'top',
+                    random: false,
+                    straight: true,
+                    out_mode: 'out',
+                    bounce: false
+                  }
                 },
-                opacity: { value: 1, random: false, anim: { enable: false } },
-                size: { value: 20, random: true, anim: { enable: false } },
-                line_linked: { enable: false },
-                move: {
-                  enable: true,
-                  speed: 6,
-                  direction: 'top',
-                  random: false,
-                  straight: true,
-                  out_mode: 'out',
-                  bounce: false
-                }
-              },
-              interactivity: { detect_on: 'canvas', events: { onclick: { enable: false } } },
-              retina_detect: true
-            });
+                interactivity: { detect_on: 'canvas', events: { onclick: { enable: false } } },
+                retina_detect: true
+              });
+            }
           }
         })
         .catch(error => {
