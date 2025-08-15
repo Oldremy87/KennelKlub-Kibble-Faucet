@@ -22,6 +22,17 @@
       justify-content: center;
       align-items: center;
       color: #333;
+      position: relative; /* For particles canvas */
+      overflow: auto; /* Ensure scrolling if needed */
+    }
+    .particles-js {
+      position: absolute;
+      top: 0;
+      left: 0;
+      width: 100%;
+      height: 100%;
+      z-index: 0; /* Behind content */
+      pointer-events: none; /* Prevent interference with clicks */
     }
     .container {
       max-width: 500px;
@@ -30,6 +41,8 @@
       border-radius: 15px;
       box-shadow: 0 4px 8px rgba(0, 0, 0, 0.1);
       border: 2px solid #ffcc00;
+      position: relative;
+      z-index: 1; /* Above particles */
     }
     h1 {
       font-size: 2.2em;
@@ -102,14 +115,6 @@
     audio {
       display: none;
     }
-    .particles-js {
-      position: absolute;
-      top: 0;
-      left: 0;
-      width: 100%;
-      height: 100%;
-      z-index: 0;
-    }
     @media (max-width: 600px) {
       .container {
         padding: 20px;
@@ -141,38 +146,42 @@
     <a href="https://pixelpupsgame.com" target="_blank" class="community-link" aria-label="Join the PixelPups community">Join the PixelPups Community!</a>
   </div>
   <script>
-    // Initialize particles.js
-    if (typeof particlesJS === 'function') {
-      particlesJS({
-        particles: {
-          number: { value: 0, density: { enable: false } }, // Start with no particles
-          color: { value: ['#ffcc00', '#e6b800', '#fff'] },
-          shape: {
-            type: 'image',
-            stroke: { width: 0, color: '#000000' },
-            image: { src: '/pawprint.svg', width: 32, height: 40 }
+    // Ensure particles.js initializes after DOM load
+    document.addEventListener('DOMContentLoaded', () => {
+      if (typeof particlesJS === 'function') {
+        particlesJS({
+          particles: {
+            number: { value: 0, density: { enable: false } }, // Start with no particles
+            color: { value: ['#ffcc00', '#e6b800', '#fff'] },
+            shape: {
+              type: 'image',
+              stroke: { width: 0, color: '#000000' },
+              image: { src: '/pawprint.svg', width: 32, height: 40 }
+            },
+            opacity: { value: 1, random: false, anim: { enable: false } },
+            size: { value: 20, random: true, anim: { enable: false } },
+            line_linked: { enable: false },
+            move: {
+              enable: true,
+              speed: 6,
+              direction: 'top',
+              random: false,
+              straight: true,
+              out_mode: 'out',
+              bounce: false
+            }
           },
-          opacity: { value: 1, random: false, anim: { enable: false } },
-          size: { value: 20, random: true, anim: { enable: false } },
-          line_linked: { enable: false },
-          move: {
-            enable: true,
-            speed: 6,
-            direction: 'top',
-            random: false,
-            straight: true,
-            out_mode: 'out',
-            bounce: false
-          }
-        },
-        interactivity: { detect_on: 'canvas', events: { onclick: { enable: false } } },
-        retina_detect: true
-      });
-      console.log('particles.js initialized');
-    } else {
-      console.error('particles.js not loaded');
-    }
+          interactivity: { detect_on: 'canvas', events: { onclick: { enable: false } } },
+          retina_detect: true
+        }, () => {
+          console.log('particles.js initialized');
+        });
+      } else {
+        console.error('particles.js not loaded');
+      }
+    });
 
+    // Declare variables at the top
     const addressInput = document.getElementById('addressInput');
     const submitButton = document.getElementById('submitButton');
     const loading = document.getElementById('loading');
@@ -199,8 +208,7 @@
           return response.json();
         })
         .then(data => {
-          console.log('Fetch response:', response); // response is not defined here
-          console.log('Parsed data:', data);
+          console.log('Parsed data:', data); // Removed out-of-scope response
           result.innerText = data.error || data.message;
           result.className = data.error ? 'error' : 'success';
           if (!data.error && typeof particlesJS === 'function') {
