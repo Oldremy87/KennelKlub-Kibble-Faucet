@@ -22,8 +22,8 @@
       justify-content: center;
       align-items: center;
       color: #333;
-      position: relative; /* For particles canvas */
-      overflow: auto; /* Ensure scrolling if needed */
+      position: relative;
+      overflow: auto;
     }
     .particles-js {
       position: absolute;
@@ -31,8 +31,8 @@
       left: 0;
       width: 100%;
       height: 100%;
-      z-index: 0; /* Behind content */
-      pointer-events: none; /* Prevent interference with clicks */
+      z-index: 0;
+      pointer-events: none;
     }
     .container {
       max-width: 500px;
@@ -42,7 +42,7 @@
       box-shadow: 0 4px 8px rgba(0, 0, 0, 0.1);
       border: 2px solid #ffcc00;
       position: relative;
-      z-index: 1; /* Above particles */
+      z-index: 1;
     }
     h1 {
       font-size: 2.2em;
@@ -146,47 +146,50 @@
     <a href="https://pixelpupsgame.com" target="_blank" class="community-link" aria-label="Join the PixelPups community">Join the PixelPups Community!</a>
   </div>
   <script>
-    // Ensure particles.js initializes after DOM load
-    document.addEventListener('DOMContentLoaded', () => {
-      if (typeof particlesJS === 'function') {
-        particlesJS({
-          particles: {
-            number: { value: 0, density: { enable: false } }, // Start with no particles
-            color: { value: ['#ffcc00', '#e6b800', '#fff'] },
-            shape: {
-              type: 'image',
-              stroke: { width: 0, color: '#000000' },
-              image: { src: '/pawprint.svg', width: 32, height: 40 }
-            },
-            opacity: { value: 1, random: false, anim: { enable: false } },
-            size: { value: 20, random: true, anim: { enable: false } },
-            line_linked: { enable: false },
-            move: {
-              enable: true,
-              speed: 6,
-              direction: 'top',
-              random: false,
-              straight: true,
-              out_mode: 'out',
-              bounce: false
-            }
-          },
-          interactivity: { detect_on: 'canvas', events: { onclick: { enable: false } } },
-          retina_detect: true
-        }, () => {
-          console.log('particles.js initialized');
-        });
-      } else {
-        console.error('particles.js not loaded');
-      }
-    });
-
     // Declare variables at the top
     const addressInput = document.getElementById('addressInput');
     const submitButton = document.getElementById('submitButton');
     const loading = document.getElementById('loading');
     const result = document.getElementById('result');
     const feedSound = document.getElementById('feedSound');
+
+    // Initialize particles.js after full page load
+    window.onload = () => {
+      if (typeof particlesJS === 'function') {
+        try {
+          particlesJS({
+            particles: {
+              number: { value: 0, density: { enable: false } },
+              color: { value: ['#ffcc00', '#e6b800', '#fff'] },
+              shape: {
+                type: 'image',
+                stroke: { width: 0, color: '#000000' },
+                image: { src: '/pawprint.svg', width: 32, height: 40 }
+              },
+              opacity: { value: 1, random: false, anim: { enable: false } },
+              size: { value: 20, random: true, anim: { enable: false } },
+              line_linked: { enable: false },
+              move: {
+                enable: true,
+                speed: 6,
+                direction: 'top',
+                random: false,
+                straight: true,
+                out_mode: 'out',
+                bounce: false
+              }
+            },
+            interactivity: { detect_on: 'canvas', events: { onclick: { enable: false } } },
+            retina_detect: true
+          });
+          console.log('particles.js initialized');
+        } catch (error) {
+          console.error('particles.js initialization failed:', error);
+        }
+      } else {
+        console.error('particles.js not loaded');
+      }
+    };
 
     function requestTokens() {
       const address = addressInput.value.trim();
@@ -208,12 +211,12 @@
           return response.json();
         })
         .then(data => {
-          console.log('Parsed data:', data); // Removed out-of-scope response
+          console.log('Parsed data:', data);
           result.innerText = data.error || data.message;
           result.className = data.error ? 'error' : 'success';
-          if (!data.error && typeof particlesJS === 'function') {
+          if (!data.error) {
             feedSound.play();
-            const pJS = window.pJSDom ? window.pJSDom[0].pJS : null;
+            const pJS = window.pJSDom && window.pJSDom.length ? window.pJSDom[0].pJS : null;
             if (pJS) {
               pJS.fn.vendors.destroypJS();
               particlesJS('particles-js', {
@@ -241,6 +244,9 @@
                 interactivity: { detect_on: 'canvas', events: { onclick: { enable: false } } },
                 retina_detect: true
               });
+            } else {
+              console.warn('pJS not available, skipping confetti');
+              result.innerText += ' (Confetti failed to load)';
             }
           }
         })
