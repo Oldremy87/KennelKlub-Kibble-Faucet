@@ -9,7 +9,6 @@
   <meta name="viewport" content="width=device-width, initial-scale=1.0">
   <title>KennelKlub KIBL Faucet</title>
   <script src="https://hcaptcha.com/1/api.js" async defer></script>
-  <script src="/particles.js"></script> <!-- Local particles.js -->
   <style>
     body {
       font-family: 'Arial', sans-serif;
@@ -22,17 +21,6 @@
       justify-content: center;
       align-items: center;
       color: #333;
-      position: relative;
-      overflow: auto;
-    }
-    .particles-js {
-      position: absolute;
-      top: 0;
-      left: 0;
-      width: 100%;
-      height: 100%;
-      z-index: 0;
-      pointer-events: none;
     }
     .container {
       max-width: 500px;
@@ -41,8 +29,6 @@
       border-radius: 15px;
       box-shadow: 0 4px 8px rgba(0, 0, 0, 0.1);
       border: 2px solid #ffcc00;
-      position: relative;
-      z-index: 1;
     }
     h1 {
       font-size: 2.2em;
@@ -130,14 +116,13 @@
   </style>
 </head>
 <body>
-  <div class="particles-js"></div> <!-- Canvas for particles -->
   <div class="container" role="main">
     <h1>KennelKlub KIBL Faucet</h1>
-    <p>Get 1000 KIBL for the PixelPup Video Poker Game – Launching Soon!</p>
+    <p>Get 10,000 to 25,000 KIBL for the PixelPup Video Poker Game – Launching Soon!</p>
     <img src="pixelpup.png" alt="PixelPup Artwork" class="pixelpup-image">
-    <input type="text" id="addressInput" placeholder="Enter your Nexa testnet address" aria-label="Nexa testnet address input">
+    <input type="text" id="addressInput" placeholder="Enter your Nexa mainnet address" aria-label="Nexa mainnet address input">
     <div class="h-captcha" data-sitekey="d4801768-d9cc-48aa-beb0-bfb00d969b18"></div>
-    <button id="submitButton" onclick="requestTokens()" aria-label="Request 1000 KIBL tokens">
+    <button id="submitButton" onclick="requestTokens()" aria-label="Request 10,000-25,000 KIBL tokens">
       FEED ME!
     </button>
     <div id="loading" aria-live="polite">Processing your request...</div>
@@ -146,50 +131,11 @@
     <a href="https://pixelpupsgame.com" target="_blank" class="community-link" aria-label="Join the PixelPups community">Join the PixelPups Community!</a>
   </div>
   <script>
-    // Declare variables at the top
     const addressInput = document.getElementById('addressInput');
     const submitButton = document.getElementById('submitButton');
     const loading = document.getElementById('loading');
     const result = document.getElementById('result');
     const feedSound = document.getElementById('feedSound');
-
-    // Initialize particles.js after full page load
-    window.onload = () => {
-      if (typeof particlesJS === 'function') {
-        try {
-          particlesJS({
-            particles: {
-              number: { value: 0, density: { enable: false } },
-              color: { value: ['#ffcc00', '#e6b800', '#fff'] },
-              shape: {
-                type: 'image',
-                stroke: { width: 0, color: '#000000' },
-                image: { src: '/pawprint.svg', width: 32, height: 40 }
-              },
-              opacity: { value: 1, random: false, anim: { enable: false } },
-              size: { value: 20, random: true, anim: { enable: false } },
-              line_linked: { enable: false },
-              move: {
-                enable: true,
-                speed: 6,
-                direction: 'top',
-                random: false,
-                straight: true,
-                out_mode: 'out',
-                bounce: false
-              }
-            },
-            interactivity: { detect_on: 'canvas', events: { onclick: { enable: false } } },
-            retina_detect: true
-          });
-          console.log('particles.js initialized');
-        } catch (error) {
-          console.error('particles.js initialization failed:', error);
-        }
-      } else {
-        console.error('particles.js not loaded');
-      }
-    };
 
     function requestTokens() {
       const address = addressInput.value.trim();
@@ -212,47 +158,21 @@
         })
         .then(data => {
           console.log('Parsed data:', data);
-          result.innerText = data.error || data.message;
+          result.innerText = data.error || `Success! ${data.message}`;
           result.className = data.error ? 'error' : 'success';
           if (!data.error) {
             feedSound.play();
-            const pJS = window.pJSDom && window.pJSDom.length ? window.pJSDom[0].pJS : null;
-            if (pJS) {
-              pJS.fn.vendors.destroypJS();
-              particlesJS('particles-js', {
-                particles: {
-                  number: { value: 25, density: { enable: true, value_area: 800 } },
-                  color: { value: ['#ffcc00', '#e6b800', '#fff'] },
-                  shape: {
-                    type: 'image',
-                    stroke: { width: 0, color: '#000000' },
-                    image: { src: '/pawprint.svg', width: 32, height: 40 }
-                  },
-                  opacity: { value: 1, random: false, anim: { enable: false } },
-                  size: { value: 20, random: true, anim: { enable: false } },
-                  line_linked: { enable: false },
-                  move: {
-                    enable: true,
-                    speed: 6,
-                    direction: 'top',
-                    random: false,
-                    straight: true,
-                    out_mode: 'out',
-                    bounce: false
-                  }
-                },
-                interactivity: { detect_on: 'canvas', events: { onclick: { enable: false } } },
-                retina_detect: true
-              });
-            } else {
-              console.warn('pJS not available, skipping confetti');
-              result.innerText += ' (Confetti failed to load)';
-            }
           }
         })
         .catch(error => {
           console.error('Fetch error:', error);
-          result.innerText = 'An error occurred. Please try again.';
+          let errorMessage = 'An error occurred. Please try again.';
+          if (error.message.includes('429')) {
+            errorMessage = 'Rate limit exceeded. Try again in 4 hours.';
+          } else if (error.message.includes('400')) {
+            errorMessage = 'Invalid request. Check your address or hCaptcha.';
+          }
+          result.innerText = errorMessage;
           result.className = 'error';
         })
         .finally(() => {
@@ -262,7 +182,7 @@
     }
 
     addressInput.addEventListener('input', () => {
-      if (addressInput.value.trim() && !/^(nexa|nexatest):/.test(addressInput.value.trim())) {
+      if (addressInput.value.trim() && !/^(nexa):/.test(addressInput.value.trim())) {
         addressInput.style.borderColor = '#dc3545';
       } else {
         addressInput.style.borderColor = '#ffcc00';

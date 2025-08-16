@@ -27,10 +27,10 @@ app.use(helmet({
       defaultSrc: ["'self'"],
       scriptSrc: ["'self'", "'unsafe-inline'", "https://hcaptcha.com", "https://*.hcaptcha.com"],
       scriptSrcAttr: ["'self'", "'unsafe-inline'"],
-      connectSrc: ["'self'", "https://346d614067e1.ngrok-free.app", "https://hcaptcha.com", "https://*.hcaptcha.com"],
+      connectSrc: ["'self'", "https://42ee4d0b0e71.ngrok-free.app", "https://hcaptcha.com", "https://*.hcaptcha.com"],
       styleSrc: ["'self'", "'unsafe-inline'", "https://hcaptcha.com", "https://*.hcaptcha.com"],
       frameSrc: ["'self'", "https://hcaptcha.com", "https://*.hcaptcha.com"],
-      imgSrc: ["'self'", "data:"] // Allow local and data URLs for paw print SVG
+      imgSrc: ["'self'", "data:"]
     }
   }
 }));
@@ -39,7 +39,6 @@ app.use((req, res, next) => {
   next();
 });
 
-// Custom static middleware to enforce MIME types
 app.use(express.static('public', {
   setHeaders: (res, path) => {
     if (path.endsWith('.js')) {
@@ -52,7 +51,6 @@ app.use(express.static('public', {
   }
 }));
 
-// Rate limiting (1 request per IP per 4 hours)
 const ipLimiter = rateLimit({
   windowMs: 4 * 60 * 60 * 1000,
   max: 1,
@@ -104,7 +102,7 @@ app.post('/request-kibl', ipLimiter, async (req, res, next) => {
     logger.warn('Address is empty:', { sanitizedAddress });
     return res.status(400).json({ error: 'Address cannot be empty!' });
   }
-  if (!Address.isValid(sanitizedAddress, Networks.nexa)) {
+  if (!Address.isValid(sanitizedAddress, Networks.mainnet.nexa)) {
     logger.warn('Address validation failed:', { sanitizedAddress });
     return res.status(400).json({ error: 'Invalid Nexa address! Please check your address and try again.' });
   }
@@ -112,21 +110,23 @@ app.post('/request-kibl', ipLimiter, async (req, res, next) => {
   const now = Date.now();
   const ipAddressKey = `${req.ip}:${sanitizedAddress}`;
   if (ipAddressLimit.has(ipAddressKey) && (now - ipAddressLimit.get(ipAddressKey)) < 4 * 60 * 60 * 1000) {
+    logger.warn('IP and address combination rate limit exceeded:', { ipAddressKey });
     return res.status(429).json({ error: 'IP and address combination rate limit exceeded. Try again in 4 hours.' });
   }
   if (addressRateLimit.has(sanitizedAddress) && (now - addressRateLimit.get(sanitizedAddress)) < 4 * 60 * 60 * 1000) {
+    logger.warn('Address rate limit exceeded:', { sanitizedAddress });
     return res.status(429).json({ error: 'Address rate limit exceeded. Try again in 4 hours.' });
   }
 
   try {
-    const rpcUrl = process.env.RPC_URL ? process.env.RPC_URL : `http://localhost:${process.env.RPC_PORT || 7229}`;
+    const rpcUrl = process.env.RPC_URL ? process.env.RPC_URL : `http://localhost:${process.env.RPC_PORT || 7227}`;
     logger.info('RPC URL:', { rpcUrl });
     const auth = Buffer.from(`${process.env.RPC_USER}:${process.env.RPC_PASSWORD}`).toString('base64');
     const body = JSON.stringify({
       jsonrpc: "1.0",
       id: "curltest",
       method: "token",
-      params: ["send", process.env.KIBL_GROUP_ID, sanitizedAddress, 1000 * Math.pow(10, 2)]
+      params: ["send", process.env.KIBL_GROUP_ID, sanitizedAddress, 100000] // Assuming 100000 satoshis for 1000 KIBL
     });
     logger.info('RPC request body:', { body });
 
@@ -164,7 +164,7 @@ app.post('/request-kibl', ipLimiter, async (req, res, next) => {
     }
   } catch (error) {
     logger.error('Token send failed at:', { timestamp: new Date().toISOString(), error });
-    res.status(500).json({ error: 'Failed to send tokens. Try again or contact support.' });
+    res.status(500).json({ error: 'Failed to send tokens due to a server issue. Please try again later or contact support.' });
   }
 });
 
