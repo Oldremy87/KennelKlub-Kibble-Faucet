@@ -52,7 +52,7 @@ app.use(express.static('public', {
 }));
 
 const ipLimiter = rateLimit({
-  windowMs: 4 * 60 * 60 * 1000,
+  windowMs: 2 * 60 * 60 * 1000,
   max: 1,
   message: { error: 'IP rate limit exceeded. Try again in 4 hours.' },
   keyGenerator: (req) => {
@@ -60,12 +60,30 @@ const ipLimiter = rateLimit({
   }
 });
 
+const addressRateLimit = new Map();
+const ipAddressLimit = new Map();
+
+// Add cleanup function
+function cleanupExpiredLimits() {
+  const now = Date.now();
+  const fourHoursMs = 2 * 60 * 60 * 1000;
+  for (let [key, timestamp] of addressRateLimit) {
+    if (now - timestamp >= fourHoursMs) {
+      addressRateLimit.delete(key);
+      logger.info('Cleaned expired address limit:', { key, timestamp });
+    }
+  }
+  for (let [key, timestamp] of ipAddressLimit) {
+    if (now - timestamp >= fourHoursMs) {
+      ipAddressLimit.delete(key);
+      logger.info('Cleaned expired IP-address limit:', { key, timestamp });
+    }
+  }
+}
+
 app.get('/', (req, res) => {
   res.sendFile(__dirname + '/public/index.html');
 });
-
-const addressRateLimit = new Map();
-const ipAddressLimit = new Map();
 
 app.post('/request-kibl', ipLimiter, async (req, res, next) => {
   logger.info('POST /request-kibl received at:', { timestamp: new Date().toISOString(), rawBody: req.body });
@@ -94,6 +112,7 @@ app.post('/request-kibl', ipLimiter, async (req, res, next) => {
   }
   next();
 }, async (req, res) => {
+  cleanupExpiredLimits(); // Call cleanup before checks
   const { address } = req.body;
   logger.info('Processing raw address:', { address });
   const sanitizedAddress = validator.trim(address);
@@ -102,18 +121,18 @@ app.post('/request-kibl', ipLimiter, async (req, res, next) => {
     logger.warn('Address is empty:', { sanitizedAddress });
     return res.status(400).json({ error: 'Address cannot be empty!' });
   }
-  if (!Address.isValid(sanitizedAddress, Networks.mainnet.nexa)) {
+  if (!Address.isValid(sanitizedAddress, Networks.mainnet)) {
     logger.warn('Address validation failed:', { sanitizedAddress });
-    return res.status(400).json({ error: 'Invalid Nexa address! Please check your address and try again.' });
+    return res.status(400).json({ error: 'Invalid Nexa mainnet address! Please check your address and try again.' });
   }
 
   const now = Date.now();
   const ipAddressKey = `${req.ip}:${sanitizedAddress}`;
-  if (ipAddressLimit.has(ipAddressKey) && (now - ipAddressLimit.get(ipAddressKey)) < 4 * 60 * 60 * 1000) {
+  if (ipAddressLimit.has(ipAddressKey) && (now - ipAddressLimit.get(ipAddressKey)) < 2 * 60 * 60 * 1000) {
     logger.warn('IP and address combination rate limit exceeded:', { ipAddressKey });
     return res.status(429).json({ error: 'IP and address combination rate limit exceeded. Try again in 4 hours.' });
   }
-  if (addressRateLimit.has(sanitizedAddress) && (now - addressRateLimit.get(sanitizedAddress)) < 4 * 60 * 60 * 1000) {
+  if (addressRateLimit.has(sanitizedAddress) && (now - addressRateLimit.get(sanitizedAddress)) < 2 * 60 * 60 * 1000) {
     logger.warn('Address rate limit exceeded:', { sanitizedAddress });
     return res.status(429).json({ error: 'Address rate limit exceeded. Try again in 4 hours.' });
   }
@@ -126,7 +145,7 @@ app.post('/request-kibl', ipLimiter, async (req, res, next) => {
       jsonrpc: "1.0",
       id: "curltest",
       method: "token",
-      params: ["send", process.env.KIBL_GROUP_ID, sanitizedAddress, 2500000] // Assuming 100000 satoshis for 1000 KIBL
+      params: ["send", process.env.KIBL_GROUP_ID, sanitizedAddress, 2500000] // 25,000 KIBL in satoshis
     });
     logger.info('RPC request body:', { body });
 
@@ -150,7 +169,7 @@ app.post('/request-kibl', ipLimiter, async (req, res, next) => {
         const successResponse = {
           success: true,
           txId: txId,
-          message: `Sent 25000 KIBL to ${sanitizedAddress}`
+          message: `Sent 25,000 KIBL to ${sanitizedAddress}`
         };
         logger.info('Success response:', { response: successResponse });
         addressRateLimit.set(sanitizedAddress, now);
