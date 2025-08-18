@@ -52,9 +52,9 @@ app.use(express.static('public', {
 }));
 
 const ipLimiter = rateLimit({
-  windowMs: 2 * 60 * 60 * 1000,
+  windowMs: 2 * 60 * 60 * 1000, // 2 hours
   max: 1,
-  message: { error: 'IP rate limit exceeded. Try again in 4 hours.' },
+  message: { error: 'IP rate limit exceeded. Try again in 2 hours.' },
   keyGenerator: (req) => {
     return ipKeyGenerator(req) + (req.headers['user-agent'] || '');
   }
@@ -63,10 +63,11 @@ const ipLimiter = rateLimit({
 const addressRateLimit = new Map();
 const ipAddressLimit = new Map();
 
-// Add cleanup function
+// Fix cleanup function with defined time constant
 function cleanupExpiredLimits() {
   const now = Date.now();
-  const fourHoursMs = 2 * 60 * 60 * 1000;
+  const twoHoursMs = 2 * 60 * 60 * 1000; // Define 2 hours in milliseconds
+  logger.info('Cleaning expired limits:', { now, addressCount: addressRateLimit.size, ipCount: ipAddressLimit.size });
   for (let [key, timestamp] of addressRateLimit) {
     if (now - timestamp >= twoHoursMs) {
       addressRateLimit.delete(key);
