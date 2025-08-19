@@ -10,6 +10,9 @@ const { Address, Networks } = require('libnexa-ts');
 const hcaptcha = require('hcaptcha');
 const app = express();
 
+// Define globally
+const twoHoursMs = 2 * 60 * 60 * 1000;
+
 // Setup logging with winston
 const logger = winston.createLogger({
   level: 'info',
@@ -51,23 +54,20 @@ app.use(express.static('public', {
   }
 }));
 
-// Apply ipLimiter only to POST /request-kibl with reset check
 const ipLimiter = rateLimit({
-  windowMs: 2 * 60 * 60 * 1000, // 2 hours
-  max: 2, // Allow 2 POST requests per IP
+  windowMs: twoHoursMs, // Use global constant
+  max: 2,
   message: { error: 'IP rate limit exceeded. Try again in 2 hours.' },
   keyGenerator: (req) => (req.method === 'POST' && req.path === '/request-kibl' ? ipKeyGenerator(req) + (req.headers['user-agent'] || '') : null),
-  skip: (req) => !(req.method === 'POST' && req.path === '/request-kibl'), // Skip non-POST or non-/request-kibl
-  store: undefined // Disable default store to avoid persistence issues
+  skip: (req) => !(req.method === 'POST' && req.path === '/request-kibl'),
+  store: undefined
 });
 
 const addressRateLimit = new Map();
 const ipAddressLimit = new Map();
 
-// Enhanced cleanup function
 function cleanupExpiredLimits() {
   const now = Date.now();
-  const twoHoursMs = 2 * 60 * 60 * 1000;
   const initialCount = { address: addressRateLimit.size, ip: ipAddressLimit.size };
   let cleaned = { address: 0, ip: 0 };
   for (let [key, timestamp] of addressRateLimit) {
@@ -87,8 +87,7 @@ function cleanupExpiredLimits() {
   }
 }
 
-// Run cleanup periodically
-setInterval(cleanupExpiredLimits, 5 * 60 * 1000); // Every 5 minutes
+setInterval(cleanupExpiredLimits, 5 * 60 * 1000);
 
 app.get('/', (req, res) => {
   res.sendFile(__dirname + '/public/index.html');
@@ -121,7 +120,7 @@ app.post('/request-kibl', ipLimiter, async (req, res, next) => {
   }
   next();
 }, async (req, res) => {
-  cleanupExpiredLimits(); // Call cleanup before checks
+  cleanupExpiredLimits();
   const { address } = req.body;
   logger.info('Processing raw address:', { address });
   const sanitizedAddress = validator.trim(address);
