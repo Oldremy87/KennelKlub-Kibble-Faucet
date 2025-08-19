@@ -144,7 +144,7 @@
     <h2>PixelPup Video Poker</h2>
     <p>Coming soon! Play with your KIBL in a thrilling video poker game featuring PixelPup. Level up, unlock skins, and join tournaments. Stay tuned for the alpha release!</p>
     <input type="text" id="addressInput" placeholder="Enter your Nexa mainnet address" aria-label="Nexa mainnet address input">
-    <div class="h-captcha" data-sitekey="your-hcaptcha-site-key-here"></div>
+    <div class="h-captcha" data-sitekey="d4801768-d9cc-48aa-beb0-bfb00d969b18"></div>
     <button id="submitButton" onclick="requestTokens()" aria-label="Request 25,000 KIBL tokens">
       FEED ME!
     </button>
@@ -164,7 +164,7 @@
       const address = addressInput.value.trim();
       const captchaToken = document.querySelector('textarea[name="h-captcha-response"]').value;
       if (!captchaToken) {
-        result.innerText = 'Please complete the hCaptcha challenge!';
+        result.innerText = 'Please complete the hCaptcha challenge!';git 
         result.className = 'error';
         return;
       }
