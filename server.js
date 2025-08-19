@@ -51,36 +51,43 @@ app.use(express.static('public', {
   }
 }));
 
+// Apply ipLimiter only to POST /request-kibl
 const ipLimiter = rateLimit({
   windowMs: 2 * 60 * 60 * 1000, // 2 hours
-  max: 1,
+  max: 2, // Allow 2 POST requests per IP
   message: { error: 'IP rate limit exceeded. Try again in 2 hours.' },
   keyGenerator: (req) => {
-    return ipKeyGenerator(req) + (req.headers['user-agent'] || '');
-  }
+    return req.method === 'POST' && req.path === '/request-kibl' ? ipKeyGenerator(req) + (req.headers['user-agent'] || '') : null;
+  },
+  skip: (req) => req.method !== 'POST' || req.path !== '/request-kibl' // Skip non-POST or non-/request-kibl
 });
 
 const addressRateLimit = new Map();
 const ipAddressLimit = new Map();
 
-// Fix cleanup function with defined time constant
+// Enhanced cleanup function
 function cleanupExpiredLimits() {
   const now = Date.now();
-  const twoHoursMs = 2 * 60 * 60 * 1000; // Define 2 hours in milliseconds
-  logger.info('Cleaning expired limits:', { now, addressCount: addressRateLimit.size, ipCount: ipAddressLimit.size });
+  const twoHoursMs = 2 * 60 * 60 * 1000;
+  const initialCount = { address: addressRateLimit.size, ip: ipAddressLimit.size };
+  let cleaned = { address: 0, ip: 0 };
   for (let [key, timestamp] of addressRateLimit) {
     if (now - timestamp >= twoHoursMs) {
       addressRateLimit.delete(key);
-      logger.info('Cleaned expired address limit:', { key, timestamp });
+      cleaned.address++;
     }
   }
   for (let [key, timestamp] of ipAddressLimit) {
     if (now - timestamp >= twoHoursMs) {
       ipAddressLimit.delete(key);
-      logger.info('Cleaned expired IP-address limit:', { key, timestamp });
+      cleaned.ip++;
     }
   }
+  logger.info('Cleaned expired limits:', { now, initialCount, cleaned, remaining: { address: addressRateLimit.size, ip: ipAddressLimit.size } });
 }
+
+// Run cleanup periodically
+setInterval(cleanupExpiredLimits, 5 * 60 * 1000); // Every 5 minutes
 
 app.get('/', (req, res) => {
   res.sendFile(__dirname + '/public/index.html');
@@ -129,13 +136,13 @@ app.post('/request-kibl', ipLimiter, async (req, res, next) => {
 
   const now = Date.now();
   const ipAddressKey = `${req.ip}:${sanitizedAddress}`;
-  if (ipAddressLimit.has(ipAddressKey) && (now - ipAddressLimit.get(ipAddressKey)) < 2 * 60 * 60 * 1000) {
-    logger.warn('IP and address combination rate limit exceeded:', { ipAddressKey });
-    return res.status(429).json({ error: 'IP and address combination rate limit exceeded. Try again in 2 hours.' });
+  if (ipAddressLimit.has(ipAddressKey) && (now - ipAddressLimit.get(ipAddressKey)) < twoHoursMs) {
+    logger.warn('IP and address combination rate limit exceeded:', { ipAddressKey, timeRemaining: (twoHoursMs - (now - ipAddressLimit.get(ipAddressKey))) / (60 * 1000) });
+    return res.status(429).json({ error: 'IP and address combination rate limit exceeded. Try again in ' + Math.ceil((twoHoursMs - (now - ipAddressLimit.get(ipAddressKey))) / (60 * 1000)) + ' minutes.' });
   }
-  if (addressRateLimit.has(sanitizedAddress) && (now - addressRateLimit.get(sanitizedAddress)) < 2 * 60 * 60 * 1000) {
-    logger.warn('Address rate limit exceeded:', { sanitizedAddress });
-    return res.status(429).json({ error: 'Address rate limit exceeded. Try again in 2 hours.' });
+  if (addressRateLimit.has(sanitizedAddress) && (now - addressRateLimit.get(sanitizedAddress)) < twoHoursMs) {
+    logger.warn('Address rate limit exceeded:', { sanitizedAddress, timeRemaining: (twoHoursMs - (now - addressRateLimit.get(sanitizedAddress))) / (60 * 1000) });
+    return res.status(429).json({ error: 'Address rate limit exceeded. Try again in ' + Math.ceil((twoHoursMs - (now - addressRateLimit.get(sanitizedAddress))) / (60 * 1000)) + ' minutes.' });
   }
 
   try {
