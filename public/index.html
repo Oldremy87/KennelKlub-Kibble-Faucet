@@ -1,10 +1,6 @@
 <!DOCTYPE html>
 <html lang="en">
 <head>
-    <link rel="apple-touch-icon" sizes="180x180" href="/apple-touch-icon.png">
-<link rel="icon" type="image/png" sizes="32x32" href="/favicon-32x32.png">
-<link rel="icon" type="image/png" sizes="16x16" href="/favicon-16x16.png">
-<link rel="manifest" href="/site.webmanifest">
   <meta charset="UTF-8">
   <meta name="viewport" content="width=device-width, initial-scale=1.0">
   <title>KennelKlub KIBL Faucet</title>
@@ -16,11 +12,11 @@
       color: #ffffff;
       margin: 0;
       padding: 0;
-      height: 100vh;
+      min-height: 100vh; /* Ensure minimum height */
       display: flex;
       justify-content: center;
-      align-items: center;
-      overflow: auto;
+      align-items: flex-start; /* Align to top */
+      overflow-y: auto; /* Allow scrolling */
     }
     .container {
       max-width: 600px;
@@ -29,6 +25,8 @@
       border-radius: 10px;
       box-shadow: 0 4px 15px rgba(0, 0, 0, 0.5);
       text-align: center;
+      width: 90%; /* Responsive width */
+      margin-top: 10px; /* Offset from top */
     }
     h1 {
       font-size: 2.5em;
@@ -141,12 +139,12 @@
 <body>
   <div class="container" role="main">
     <h1>KennelKlub KIBL Faucet</h1>
-    <p>Welcome to the KennelKlub, a vibrant community on the Nexa blockchain, home to PixelPup—the lovable mascot powering our ecosystem! Claim 25,000 KIBL from our 50M drop (5% supply) to fuel the upcoming <strong>PixelPup Video Poker</strong> app, where you’ll bet and win with $KIBL. Trading on Nebula is in testing—get ready!</p>
+    <p>Welcome to KennelKlub, a vibrant community on the Nexa blockchain, home to PixelPup—the lovable mascot powering our ecosystem! Claim 25,000 KIBL from our 50M drop (5% supply) to fuel the upcoming <strong>PixelPup Video Poker</strong> app, where you’ll bet and win with $KIBL. Trading on Nebula is in testing—get ready!</p>
     <img src="pixelpup.png" alt="PixelPup Artwork" class="pixelpup-image">
     <h2>PixelPup Video Poker</h2>
-    <p>Coming soon! Play with your KIBL in a thrilling video poker game featuring PixelPup. Stay tuned for the alpha release!</p>
+    <p>Coming soon! Play with your KIBL in a thrilling video poker game featuring PixelPup. Level up, unlock skins, and join tournaments. Stay tuned for the alpha release!</p>
     <input type="text" id="addressInput" placeholder="Enter your Nexa mainnet address" aria-label="Nexa mainnet address input">
-    <div class="h-captcha" data-sitekey="d4801768-d9cc-48aa-beb0-bfb00d969b18"></div>
+    <div class="h-captcha" data-sitekey="your-hcaptcha-site-key-here"></div>
     <button id="submitButton" onclick="requestTokens()" aria-label="Request 25,000 KIBL tokens">
       FEED ME!
     </button>

@@ -51,15 +51,14 @@ app.use(express.static('public', {
   }
 }));
 
-// Apply ipLimiter only to POST /request-kibl
+// Apply ipLimiter only to POST /request-kibl with reset check
 const ipLimiter = rateLimit({
   windowMs: 2 * 60 * 60 * 1000, // 2 hours
   max: 2, // Allow 2 POST requests per IP
   message: { error: 'IP rate limit exceeded. Try again in 2 hours.' },
-  keyGenerator: (req) => {
-    return req.method === 'POST' && req.path === '/request-kibl' ? ipKeyGenerator(req) + (req.headers['user-agent'] || '') : null;
-  },
-  skip: (req) => req.method !== 'POST' || req.path !== '/request-kibl' // Skip non-POST or non-/request-kibl
+  keyGenerator: (req) => (req.method === 'POST' && req.path === '/request-kibl' ? ipKeyGenerator(req) + (req.headers['user-agent'] || '') : null),
+  skip: (req) => !(req.method === 'POST' && req.path === '/request-kibl'), // Skip non-POST or non-/request-kibl
+  store: undefined // Disable default store to avoid persistence issues
 });
 
 const addressRateLimit = new Map();
@@ -83,7 +82,9 @@ function cleanupExpiredLimits() {
       cleaned.ip++;
     }
   }
-  logger.info('Cleaned expired limits:', { now, initialCount, cleaned, remaining: { address: addressRateLimit.size, ip: ipAddressLimit.size } });
+  if (cleaned.address > 0 || cleaned.ip > 0) {
+    logger.info('Cleaned expired limits:', { now, initialCount, cleaned, remaining: { address: addressRateLimit.size, ip: ipAddressLimit.size } });
+  }
 }
 
 // Run cleanup periodically
@@ -119,7 +120,7 @@ app.post('/request-kibl', ipLimiter, async (req, res, next) => {
     return res.status(400).json({ error: 'hCaptcha verification failed! Error: ' + (captchaResponse['error-codes'] || 'Unknown') });
   }
   next();
-}, async (req, res) => {
+}, (req, res) => {
   cleanupExpiredLimits(); // Call cleanup before checks
   const { address } = req.body;
   logger.info('Processing raw address:', { address });
