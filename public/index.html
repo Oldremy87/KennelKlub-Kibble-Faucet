@@ -1,7 +1,7 @@
 <!DOCTYPE html>
 <html lang="en">
 <head>
-  <link rel="apple-touch-icon" sizes="180x180" href="/apple-touch-icon.png">
+    <link rel="apple-touch-icon" sizes="180x180" href="/apple-touch-icon.png">
 <link rel="icon" type="image/png" sizes="32x32" href="/favicon-32x32.png">
 <link rel="icon" type="image/png" sizes="16x16" href="/favicon-16x16.png">
 <link rel="manifest" href="/site.webmanifest">
@@ -12,56 +12,71 @@
   <style>
     body {
       font-family: 'Arial', sans-serif;
-      text-align: center;
-      padding: 50px;
-      background: linear-gradient(135deg, #f5f7fa 0%, #c3cfe2 100%);
+      background-color: #1a1a1a;
+      color: #ffffff;
       margin: 0;
+      padding: 0;
       height: 100vh;
       display: flex;
       justify-content: center;
       align-items: center;
-      color: #333;
+      overflow: auto;
     }
     .container {
-      max-width: 500px;
-      background: white;
-      padding: 40px;
-      border-radius: 15px;
-      box-shadow: 0 4px 8px rgba(0, 0, 0, 0.1);
-      border: 2px solid #ffcc00;
+      max-width: 600px;
+      background: rgba(255, 255, 255, 0.1);
+      padding: 30px;
+      border-radius: 10px;
+      box-shadow: 0 4px 15px rgba(0, 0, 0, 0.5);
+      text-align: center;
     }
     h1 {
-      font-size: 2.2em;
-      margin-bottom: 15px;
+      font-size: 2.5em;
+      margin-bottom: 20px;
+      color: #ffcc00;
+      font-weight: bold;
+    }
+    h2 {
+      font-size: 1.5em;
+      margin: 15px 0;
+      color: #00ffcc;
     }
     p {
-      font-size: 1.2em;
-      margin-bottom: 25px;
+      font-size: 1.1em;
+      margin-bottom: 15px;
+      color: #ccc;
+      line-height: 1.5;
     }
     .pixelpup-image {
       max-width: 250px;
-      margin-bottom: 25px;
-      border-radius: 10px;
-      box-shadow: 0 2px 4px rgba(0, 0, 0, 0.1);
+      margin: 20px 0;
+      border-radius: 5px;
+      box-shadow: 0 2px 5px rgba(0, 0, 0, 0.3);
     }
     input {
       padding: 12px;
       margin: 10px 0;
-      width: 80%;
-      border: 2px solid #ffcc00;
+      width: 100%;
+      border: 1px solid #333;
       border-radius: 5px;
-      font-size: 1.1em;
+      background: #2a2a2a;
+      color: #fff;
+      font-size: 1em;
+      transition: border-color 0.3s;
+    }
+    input:focus {
+      border-color: #ffcc00;
+      outline: none;
     }
     button {
       padding: 12px 30px;
       background: #ffcc00;
-      color: white;
+      color: #1a1a1a;
       border: none;
       border-radius: 5px;
-      font-size: 1.3em;
+      font-size: 1.2em;
       cursor: pointer;
-      position: relative;
-      transition: background 0.3s ease;
+      transition: background 0.3s, transform 0.2s;
     }
     button::after {
       content: "🐾";
@@ -70,47 +85,55 @@
     }
     button:hover {
       background: #e6b800;
+      transform: scale(1.05);
     }
     button:disabled {
-      background: #ccc;
+      background: #666;
       cursor: not-allowed;
     }
     #result {
       margin-top: 20px;
-      font-size: 1.2em;
-      color: #28a745;
+      font-size: 1.1em;
+      color: #00ffcc;
     }
     #result.error {
-      color: #dc3545;
+      color: #ff5555;
     }
     #loading {
       display: none;
       margin: 10px 0;
       font-style: italic;
-      color: #666;
+      color: #999;
     }
     .community-link {
       margin-top: 20px;
       font-size: 0.9em;
-      color: #007bff;
+      color: #00ffcc;
       text-decoration: none;
     }
     .community-link:hover {
       text-decoration: underline;
+      color: #ffcc00;
     }
     audio {
       display: none;
     }
     @media (max-width: 600px) {
       .container {
-        padding: 20px;
+        padding: 15px;
         width: 90%;
       }
       h1 {
         font-size: 2em;
       }
+      h2 {
+        font-size: 1.3em;
+      }
       .pixelpup-image {
         max-width: 200px;
+      }
+      button {
+        font-size: 1.1em;
       }
     }
   </style>
@@ -118,17 +141,19 @@
 <body>
   <div class="container" role="main">
     <h1>KennelKlub KIBL Faucet</h1>
-    <p>Get 25,000 KIBL for the PixelPup Video Poker Game and Nebula Trading – Launching Soon!</p>
+    <p>Welcome to KennelKlub, a vibrant community on the Nexa blockchain, home to PixelPup—the lovable mascot powering our ecosystem! Claim 25,000 KIBL from our 50M drop (5% supply) to fuel the upcoming <strong>PixelPup Video Poker</strong> app, where you’ll bet and win with $KIBL. Trading on Nebula is in testing—get ready!</p>
     <img src="pixelpup.png" alt="PixelPup Artwork" class="pixelpup-image">
-    <input type="text" id="addressInput" placeholder="Enter your Nexa address" aria-label="Nexa address input">
-    <div class="h-captcha" data-sitekey="d4801768-d9cc-48aa-beb0-bfb00d969b18"></div>
+    <h2>PixelPup Video Poker</h2>
+    <p>Coming soon! Play with your KIBL in a thrilling video poker game featuring PixelPup. Level up, unlock skins, and join tournaments. Stay tuned for the alpha release!</p>
+    <input type="text" id="addressInput" placeholder="Enter your Nexa mainnet address" aria-label="Nexa mainnet address input">
+    <div class="h-captcha" data-sitekey="your-hcaptcha-site-key-here"></div>
     <button id="submitButton" onclick="requestTokens()" aria-label="Request 25,000 KIBL tokens">
       FEED ME!
     </button>
     <div id="loading" aria-live="polite">Processing your request...</div>
     <p id="result" aria-live="polite"></p>
     <audio id="feedSound" src="dogfood.mp3"></audio>
-    <a href="https://t.me/NexaKennelKlub" target="_blank" class="community-link" aria-label="Join the KennelKlub community">Join the KennelKlub Community!</a>
+    <a href="https://pixelpupsgame.com" target="_blank" class="community-link" aria-label="Join the PixelPups community">Join the PixelPups Community!</a>
   </div>
   <script>
     const addressInput = document.getElementById('addressInput');
@@ -168,7 +193,7 @@
           console.error('Fetch error:', error);
           let errorMessage = 'An error occurred. Please try again.';
           if (error.message.includes('429')) {
-            errorMessage = 'Rate limit exceeded. Try again in 4 hours.';
+            errorMessage = 'Rate limit exceeded. Try again in 2 hours.';
           } else if (error.message.includes('400')) {
             errorMessage = 'Invalid request. Check your address or hCaptcha.';
           }
@@ -183,9 +208,9 @@
 
     addressInput.addEventListener('input', () => {
       if (addressInput.value.trim() && !/^(nexa):/.test(addressInput.value.trim())) {
-        addressInput.style.borderColor = '#dc3545';
+        addressInput.style.borderColor = '#ff5555';
       } else {
-        addressInput.style.borderColor = '#ffcc00';
+        addressInput.style.borderColor = '#333';
       }
     });
   </script>
