@@ -153,7 +153,7 @@ app.post('/request-kibl', ipLimiter, async (req, res, next) => {
       jsonrpc: "1.0",
       id: "curltest",
       method: "token",
-      params: ["send", process.env.KIBL_GROUP_ID, sanitizedAddress, 25000000] // 25,000 KIBL in satoshis
+      params: ["send", process.env.KIBL_GROUP_ID, sanitizedAddress, 2500000] // 25,000 KIBL in satoshis
     });
     logger.info('RPC request body:', { body });
 
@@ -177,7 +177,7 @@ app.post('/request-kibl', ipLimiter, async (req, res, next) => {
         const successResponse = {
           success: true,
           txId: txId,
-          message: `Sent 250,000 KIBL to ${sanitizedAddress}`
+          message: `Sent 25,000 KIBL to ${sanitizedAddress}`
         };
         logger.info('Success response:', { response: successResponse });
         addressRateLimit.set(sanitizedAddress, now);
